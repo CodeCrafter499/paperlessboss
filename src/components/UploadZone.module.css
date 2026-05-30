@@ -1,0 +1,126 @@
+.wrapper {
+  width: 100%;
+}
+
+.zone {
+  border: 2px dashed var(--color-gray-300);
+  border-radius: var(--radius-xl);
+  padding: 3rem 2rem;
+  text-align: center;
+  cursor: pointer;
+  background: #fff;
+  transition: border-color 0.2s, background 0.2s, transform 0.1s;
+  outline: none;
+  position: relative;
+  user-select: none;
+}
+
+.zone:hover,
+.zone:focus {
+  border-color: var(--color-primary-mid);
+  background: var(--color-primary-light);
+}
+
+.zone:active {
+  transform: scale(0.995);
+}
+
+.zone.dragging {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+  border-style: solid;
+}
+
+.zone.loading {
+  cursor: not-allowed;
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.iconWrap {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 1rem;
+  background: var(--color-primary-light);
+  border-radius: 50%;
+}
+
+.icon {
+  color: var(--color-primary);
+}
+
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--color-primary-light);
+  border-top-color: var(--color-primary);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--color-gray-600);
+  margin-bottom: 1.25rem;
+  line-height: 1.5;
+}
+
+.browseBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-md);
+  padding: 8px 20px;
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 1rem;
+  transition: background 0.15s;
+}
+
+.zone:hover .browseBtn {
+  background: var(--color-primary-dark);
+}
+
+.hint {
+  font-size: 12px;
+  color: var(--color-gray-500);
+}
+
+.errorBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 12px 16px;
+  background: var(--color-danger-bg);
+  border: 1px solid #F09595;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  color: var(--color-danger);
+  line-height: 1.5;
+}
+
+.errorBox svg {
+  flex-shrink: 0;
+  margin-top: 1px;
+}

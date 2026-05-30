@@ -1,0 +1,144 @@
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: 16px 20px;
+  box-shadow: var(--shadow-sm);
+}
+
+.left {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.icon {
+  color: var(--color-primary);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: 4px;
+}
+
+.sub {
+  font-size: 12px;
+  color: var(--color-gray-500);
+}
+
+.progressWrap {
+  height: 6px;
+  background: var(--color-gray-200);
+  border-radius: 99px;
+  overflow: hidden;
+  margin-top: 6px;
+  width: 100%;
+  max-width: 320px;
+}
+
+.progressBar {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 99px;
+  transition: width 0.25s ease;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+}
+
+.btn:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.spin {
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.formatRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--color-gray-100);
+  flex-wrap: wrap;
+}
+
+.formatLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-gray-500);
+  white-space: nowrap;
+}
+
+.formatGroup {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.formatBtn {
+  padding: 5px 14px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-gray-300);
+  background: #fff;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-gray-600);
+  cursor: pointer;
+  transition: all 0.12s;
+}
+
+.formatBtn:hover {
+  border-color: var(--color-primary-mid);
+  color: var(--color-primary);
+}
+
+.formatActive {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff !important;
+}

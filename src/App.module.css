@@ -1,0 +1,233 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ── Nav ── */
+.nav {
+  background: #fff;
+  border-bottom: 1px solid var(--color-gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.navInner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brandIcon {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.05em;
+}
+
+.brandName {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+}
+
+.resetBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--color-gray-300);
+  background: #fff;
+  border-radius: var(--radius-md);
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-gray-600);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.resetBtn:hover {
+  background: var(--color-gray-100);
+  color: var(--color-gray-900);
+}
+
+/* ── Main ── */
+.main {
+  flex: 1;
+  padding: 32px 24px 48px;
+}
+
+.container {
+  max-width: 860px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── Step indicator ── */
+.steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  padding: 4px 0 8px;
+}
+
+.step {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.4;
+}
+
+.stepActive,
+.stepDone {
+  opacity: 1;
+}
+
+.stepCircle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--color-gray-200);
+  color: var(--color-gray-600);
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+}
+
+.stepActive .stepCircle {
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.stepDone .stepCircle {
+  background: var(--color-success);
+  color: #fff;
+}
+
+.stepLabel {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-gray-700);
+  white-space: nowrap;
+}
+
+.stepLine {
+  flex: 1;
+  height: 1px;
+  background: var(--color-gray-200);
+  margin: 0 8px;
+  min-width: 24px;
+  transition: background 0.2s;
+}
+
+.stepLineDone {
+  background: var(--color-success);
+}
+
+/* ── Help card ── */
+.helpCard {
+  background: #fff;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  box-shadow: var(--shadow-sm);
+}
+
+.helpTitle {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-gray-900);
+  margin-bottom: 16px;
+}
+
+.helpList {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: var(--color-gray-700);
+  line-height: 1.6;
+}
+
+.helpList li strong {
+  color: var(--color-gray-900);
+}
+
+.helpColumns {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-gray-100);
+}
+
+@media (max-width: 520px) {
+  .helpColumns { grid-template-columns: 1fr; }
+}
+
+.helpColTitle {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-gray-500);
+  margin-bottom: 8px;
+}
+
+.helpColList {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--color-gray-600);
+}
+
+.helpColList li::before {
+  content: '›';
+  margin-right: 6px;
+  color: var(--color-primary);
+}
+
+/* ── Footer ── */
+.footer {
+  text-align: center;
+  padding: 20px 24px;
+  border-top: 1px solid var(--color-gray-200);
+  background: #fff;
+  font-size: 12px;
+  color: var(--color-gray-400);
+}
+
+.brandSub {
+  font-size: 11px;
+  color: var(--color-gray-500);
+  font-weight: 400;
+  margin-left: 2px;
+}

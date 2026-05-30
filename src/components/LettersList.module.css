@@ -1,0 +1,46 @@
+.wrapper { background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--color-gray-200); overflow: hidden; box-shadow: var(--shadow-sm); }
+
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--color-gray-200); background: var(--color-success-bg); flex-wrap: wrap; }
+.headerLeft { display: flex; align-items: flex-start; gap: 10px; }
+.successIcon { color: var(--color-success); flex-shrink: 0; margin-top: 2px; }
+.title { font-size: 15px; font-weight: 600; color: var(--color-gray-900); margin-bottom: 2px; }
+.sub { font-size: 12px; color: var(--color-gray-600); }
+
+.dlAllGroup { display: flex; gap: 8px; flex-wrap: wrap; flex-shrink: 0; }
+.dlAllBtn { display: inline-flex; align-items: center; gap: 6px; border: none; border-radius: var(--radius-md); padding: 8px 14px; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: opacity 0.15s; }
+.dlAllBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+.docxBtn { background: #1B5E96; color: #fff; }
+.docxBtn:hover:not(:disabled) { background: #0C447C; }
+.pdfBtn { background: #C0392B; color: #fff; }
+.pdfBtn:hover:not(:disabled) { background: #96281B; }
+.allBtn { background: var(--color-gray-700); color: #fff; }
+.allBtn:hover:not(:disabled) { background: var(--color-gray-900); }
+
+.miniSpinner { width: 13px; height: 13px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.searchWrap { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--color-gray-100); }
+.searchIcon { color: var(--color-gray-400); flex-shrink: 0; }
+.searchInput { border: none; outline: none; font-size: 13px; color: var(--color-gray-800); background: transparent; width: 100%; }
+.searchInput::placeholder { color: var(--color-gray-400); }
+
+.list { list-style: none; max-height: 500px; overflow-y: auto; }
+.item { display: flex; align-items: center; gap: 12px; padding: 11px 20px; border-bottom: 1px solid var(--color-gray-100); transition: background 0.12s; }
+.item:last-child { border-bottom: none; }
+.item:hover { background: var(--color-gray-50); }
+
+.avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--color-primary-light); color: var(--color-primary); font-size: 14px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+.info { flex: 1; min-width: 0; }
+.name { font-size: 14px; font-weight: 500; color: var(--color-gray-900); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.meta { display: flex; align-items: center; gap: 10px; margin-top: 3px; flex-wrap: wrap; }
+.metaItem { display: flex; align-items: center; gap: 4px; font-size: 11px; color: var(--color-gray-500); }
+
+.dlBtns { display: flex; gap: 6px; flex-shrink: 0; }
+.dlBtn { display: inline-flex; align-items: center; gap: 5px; border-radius: var(--radius-md); padding: 6px 12px; font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap; transition: opacity 0.12s; border: none; }
+.docxDl { background: #E8F0FB; color: #1B5E96; }
+.docxDl:hover { background: #D0E3F7; }
+.pdfDl { background: #FDECEA; color: #C0392B; }
+.pdfDl:hover { background: #FAD7D4; }
+
+.noResults { padding: 24px; text-align: center; font-size: 13px; color: var(--color-gray-500); }
