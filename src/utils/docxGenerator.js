@@ -67,7 +67,7 @@ export async function generateDocxBlob(row) {
 
   // Header image: 1191px wide at 2x = actual 595.5pt wide = full page width in EMU
   const headerImgW = CONTENT_W * 914400 / 1440; // EMU
-  const headerImgH = Math.round(headerImgW * (410 / 1191));
+  const headerImgH = Math.round(headerImgW * (390 / 1489));
 
   const footerImgW = CONTENT_W * 914400 / 1440;
   const footerImgH = Math.round(footerImgW * (114 / 1786));

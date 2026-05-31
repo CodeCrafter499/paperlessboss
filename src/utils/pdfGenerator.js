@@ -29,7 +29,7 @@ export async function generatePdfBlob(row) {
 
   // ── Header image ────────────────────────────────────────────────────────
   // Original aspect: 1191 x 410 px  → ratio 410/1191 ≈ 0.3443
-  const headerH = CONTENT_W * (410 / 1191);
+  const headerH = CONTENT_W * (390 / 1489);
   doc.addImage(b64ToDataUrl(HEADER_B64), 'JPEG', MARGIN_X, 6, CONTENT_W, headerH);
 
   // ── Footer image (on every page) ─────────────────────────────────────────

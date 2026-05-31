@@ -26,7 +26,7 @@ export default function GeneratePanel({ total, progress, isGenerating, format, o
               ? <div className={styles.progressWrap} role="progressbar" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}>
                   <div className={styles.progressBar} style={{ width: `${pct}%` }} />
                 </div>
-              : <p className={styles.sub}>Each employee gets a separate letter on the NIRL letterhead</p>
+              : <p className={styles.sub}>Each employee gets a separate letter on the Company's or Vendor's letterhead</p>
             }
           </div>
         </div>
