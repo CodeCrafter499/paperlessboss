@@ -1,5 +1,5 @@
 import React from 'react';
-import { FileText, Loader2, FileType } from 'lucide-react';
+import { FileText, Loader2, FileType, ShieldCheck } from 'lucide-react';
 import styles from './GeneratePanel.module.css';
 
 const FORMAT_OPTIONS = [
@@ -8,7 +8,7 @@ const FORMAT_OPTIONS = [
   { value: 'pdf',  label: 'PDF only',  desc: 'PDF document' },
 ];
 
-export default function GeneratePanel({ total, progress, isGenerating, format, onFormatChange, onGenerate }) {
+export default function GeneratePanel({ total, progress, isGenerating, format, onFormatChange, onGenerate, validationPassed }) {
   const pct = total > 0 ? Math.round((progress / total) * 100) : 0;
 
   return (

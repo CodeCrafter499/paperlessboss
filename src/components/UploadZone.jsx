@@ -2,7 +2,7 @@ import React, { useRef, useState, useCallback } from 'react';
 import { Upload, FileSpreadsheet, AlertCircle } from 'lucide-react';
 import styles from './UploadZone.module.css';
 
-export default function UploadZone({ onFileParsed, isParsing, error }) {
+export default function UploadZone({ onFileParsed, isParsing, isValidating, error }) {
   const inputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -37,7 +37,7 @@ export default function UploadZone({ onFileParsed, isParsing, error }) {
   return (
     <div className={styles.wrapper}>
       <div
-        className={`${styles.zone} ${isDragging ? styles.dragging : ''} ${isParsing ? styles.loading : ''}`}
+        className={`${styles.zone} ${isDragging ? styles.dragging : ''} ${(isParsing || isValidating) ? styles.loading : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
@@ -66,15 +66,17 @@ export default function UploadZone({ onFileParsed, isParsing, error }) {
         </div>
 
         <h3 className={styles.title}>
-          {isParsing ? 'Reading your file…' : 'Upload Excel File'}
+          {isValidating ? 'Validating your file…' : isParsing ? 'Reading your file…' : 'Upload Excel File'}
         </h3>
         <p className={styles.subtitle}>
-          {isParsing
-            ? 'Please wait while we parse the employee data'
-            : 'Drag & drop your .xlsx file here, or click to browse'}
+          {isValidating
+            ? 'Checking employee records against statutory requirements…'
+            : isParsing
+              ? 'Please wait while we parse the employee data'
+              : 'Drag & drop your .xlsx file here, or click to browse'}
         </p>
 
-        {!isParsing && (
+        {!isParsing && !isValidating && (
           <div className={styles.browseBtn}>
             <Upload size={14} />
             <span>Choose File</span>

@@ -5,6 +5,7 @@ import JSZip from 'jszip';
 import { RefreshCw, LogOut, User } from 'lucide-react';
 
 import UploadZone from './components/UploadZone';
+import ValidationErrors from './components/ValidationErrors';
 import DataPreview from './components/DataPreview';
 import GeneratePanel from './components/GeneratePanel';
 import LettersList from './components/LettersList';
@@ -14,6 +15,8 @@ import { parseExcelFile, validateRows } from './utils/excelParser';
 import { generateDocxBlob, sanitizeFilename } from './utils/docxGenerator';
 import { generatePdfBlob } from './utils/pdfGenerator';
 import { useAuth } from './context/AuthContext';
+import { validateExcelApi } from './utils/authApi';
+import { tokenStore } from './utils/authApi';
 
 import styles from './App.module.css';
 
@@ -43,15 +46,24 @@ export default function App() {
 
 function MainApp() {
   const { user, logout } = useAuth();
+  // App states:
+  // 'idle'       → upload zone shown
+  // 'validating' → calling /validate-excel API
+  // 'invalid'    → API returned errors, show ValidationErrors panel
+  // 'previewing' → validation passed, show data preview + generate panel
+  // 'generating' → generating letters
+  // 'done'       → letters ready for download
   const [state, setState]             = useState('idle');
   const [rows, setRows]               = useState([]);
   const [filename, setFilename]       = useState('');
+  const [currentFile, setCurrentFile] = useState(null);
   const [warnings, setWarnings]       = useState([]);
   const [parseError, setParseError]   = useState('');
   const [genProgress, setGenProgress] = useState(0);
   const [generatedFiles, setGeneratedFiles] = useState([]);
   const [isZipping, setIsZipping]     = useState(false);
   const [format, setFormat]           = useState('both');
+  const [validationResult, setValidationResult] = useState(null);
 
   // ── SEO: authenticated main app ─────────────────────────────────────
   useSeo({
@@ -64,18 +76,43 @@ function MainApp() {
     setParseError('');
     setRows([]);
     setGeneratedFiles([]);
+    setValidationResult(null);
     setFilename(file.name);
-    setState('parsing');
+    setCurrentFile(file);
+    setState('validating');
+
     try {
+      // Step 1: Server-side validation via /validate-excel API
+      const token = tokenStore.get();
+      const result = await validateExcelApi(file, token);
+      setValidationResult(result);
+
+      if (!result.success) {
+        // Has validation errors — show error panel, block generation
+        setState('invalid');
+        return;
+      }
+
+      // Step 2: Validation passed — parse locally for preview
       const { rows: parsed } = await parseExcelFile(file);
       const warns = validateRows(parsed);
       setRows(parsed);
       setWarnings(warns);
       setState('previewing');
     } catch (err) {
-      setParseError(err.message);
+      setParseError(err.message || 'Validation failed. Please try again.');
       setState('idle');
     }
+  }, []);
+
+  const handleReupload = useCallback(() => {
+    setState('idle');
+    setRows([]);
+    setCurrentFile(null);
+    setFilename('');
+    setValidationResult(null);
+    setParseError('');
+    setGeneratedFiles([]);
   }, []);
 
   const handleGenerate = useCallback(async () => {
@@ -165,10 +202,26 @@ function MainApp() {
         <div className={styles.container}>
           <StepIndicator current={state} />
 
-          {(state === 'idle' || state === 'parsing') && (
-            <UploadZone onFileParsed={handleFile} isParsing={state === 'parsing'} error={parseError} />
+          {/* Upload zone — shown when idle */}
+          {(state === 'idle' || state === 'validating') && (
+            <UploadZone
+              onFileParsed={handleFile}
+              isParsing={state === 'validating'}
+              isValidating={state === 'validating'}
+              error={parseError}
+            />
           )}
 
+          {/* Validation failed — show errors, block generation */}
+          {state === 'invalid' && validationResult && (
+            <ValidationErrors
+              result={validationResult}
+              filename={filename}
+              onReupload={handleReupload}
+            />
+          )}
+
+          {/* Validation passed — show preview + generate panel */}
           {(state === 'previewing' || state === 'generating') && (
             <>
               <DataPreview rows={rows} filename={filename} warnings={warnings} />
@@ -176,10 +229,12 @@ function MainApp() {
                 total={rows.length} progress={genProgress}
                 isGenerating={state === 'generating'}
                 format={format} onFormatChange={setFormat} onGenerate={handleGenerate}
+                validationPassed={true}
               />
             </>
           )}
 
+          {/* Letters generated — download panel */}
           {state === 'done' && (
             <>
               <DataPreview rows={rows} filename={filename} warnings={warnings} />
@@ -202,8 +257,8 @@ function MainApp() {
   );
 }
 
-const STEPS = ['Upload', 'Preview', 'Generate', 'Download'];
-const STATE_ORDER = { idle: 0, parsing: 0, previewing: 1, generating: 2, done: 3 };
+const STEPS = ['Upload', 'Validate', 'Preview', 'Generate', 'Download'];
+const STATE_ORDER = { idle: 0, validating: 1, invalid: 1, previewing: 2, generating: 3, done: 4 };
 
 function StepIndicator({ current }) {
   const ci = STATE_ORDER[current] ?? 0;
