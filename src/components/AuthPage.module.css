@@ -36,7 +36,7 @@
 
 /* ── Card ── */
 .card {
-  background: #fff;
+  background: var(--color-bg-surface);
   border-radius: 20px;
   padding: 36px 40px;
   width: 100%;

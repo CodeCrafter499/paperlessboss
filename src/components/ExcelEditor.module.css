@@ -1,0 +1,545 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-gray-200);
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-top: 15px;
+  font-family: Roboto, Arial, sans-serif;
+  color: var(--color-gray-900);
+}
+
+/* ── Menu Bar (Google Sheets style) ── */
+.menuBar {
+  display: flex;
+  align-items: center;
+  padding: 8px 16px;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-gray-200);
+  gap: 12px;
+}
+
+.brandIconWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #e6f4ea;
+  padding: 8px;
+  border-radius: 4px;
+}
+
+.sheetIcon {
+  color: #137333;
+}
+
+.titleAndMenu {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.fileName {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-gray-900);
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 250px;
+}
+
+.cloudStatus {
+  font-size: 11px;
+  color: var(--color-gray-500);
+}
+
+.menuItems {
+  display: flex;
+  gap: 14px;
+  margin-top: 4px;
+}
+
+.menuItems span {
+  font-size: 12px;
+  color: var(--color-gray-700);
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: background 0.15s ease;
+}
+
+.menuItems span:hover {
+  background: var(--color-gray-100);
+}
+
+/* ── Toolbar (Google Sheets style) ── */
+.sheetsToolbar {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--color-gray-50);
+  border-bottom: 1px solid var(--color-gray-200);
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.toolbarSection {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.toolbarIconButton {
+  background: transparent;
+  border: none;
+  color: var(--color-gray-600);
+  padding: 6px;
+  border-radius: 100px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.toolbarIconButton:hover {
+  background: var(--color-gray-200);
+}
+
+.toolbarSelect {
+  font-size: 12px;
+  color: var(--color-gray-600);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.toolbarSelect:hover {
+  background: var(--color-gray-200);
+}
+
+.toolbarDivider {
+  width: 1px;
+  height: 20px;
+  background: #c4c7c5;
+  margin: 0 4px;
+}
+
+/* Actions inside the toolbar */
+.sheetsActions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  gap: 8px;
+}
+
+.sheetsActionBtn, .sheetsValidateBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 100px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.sheetsActionBtn {
+  background: var(--color-bg-surface);
+  border: 1px solid #747775;
+  color: var(--color-gray-900);
+}
+
+.sheetsActionBtn:hover {
+  background: var(--color-gray-100);
+  border-color: var(--color-gray-900);
+}
+
+.sheetsActionBtn.dangerAction:hover {
+  background: var(--color-danger-bg);
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+
+.sheetsValidateBtn {
+  background: #0b57d0;
+  border: 1px solid transparent;
+  color: #ffffff;
+}
+
+.sheetsValidateBtn:hover:not(:disabled) {
+  background: #0842a0;
+  box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3), 0 1px 3px 1px rgba(60,64,67,0.15);
+}
+
+.sheetsValidateBtn:disabled {
+  background: #e3e3e3;
+  color: #9e9e9e;
+  cursor: not-allowed;
+}
+
+.validateWarning {
+  background: #b3261e;
+}
+
+.validateWarning:hover:not(:disabled) {
+  background: #8c1d18;
+}
+
+/* ── Formula Bar ── */
+.formulaBar {
+  display: flex;
+  align-items: center;
+  padding: 4px 12px;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-gray-200);
+  height: 36px;
+}
+
+.cellAddress {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-gray-900);
+  width: 60px;
+  text-align: center;
+  user-select: none;
+}
+
+.formulaDivider {
+  width: 1px;
+  height: 20px;
+  background: #e0e0e0;
+  margin: 0 10px;
+}
+
+.fxIcon {
+  font-family: Georgia, serif;
+  font-style: italic;
+  font-weight: bold;
+  font-size: 15px;
+  color: #80868b;
+  margin-right: 12px;
+  user-select: none;
+}
+
+.formulaInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 13px;
+  color: var(--color-gray-900);
+  background: transparent;
+  height: 100%;
+}
+
+/* ── Grid Canvas ── */
+.gridWrapper {
+  overflow: auto;
+  max-height: 480px;
+  outline: none;
+  background: var(--color-bg-surface);
+  border-bottom: 1px solid var(--color-gray-200);
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: max-content;
+  font-size: 13px;
+  table-layout: fixed;
+}
+
+.th {
+  background: var(--color-gray-50);
+  border-right: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-gray-200);
+  color: var(--color-gray-600);
+  font-weight: normal;
+  padding: 0;
+  text-align: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  white-space: nowrap;
+  user-select: none;
+  height: 44px;
+}
+
+/* Selected Column/Row Header Highlight */
+.th.activeHeader, .rowNumTd.activeHeader {
+  background: var(--color-primary-pale) !important;
+  color: var(--color-primary) !important;
+  font-weight: bold;
+}
+
+.colLetter {
+  font-size: 11px;
+  color: var(--color-gray-500);
+  height: 18px;
+  line-height: 18px;
+  border-bottom: 1px solid var(--color-gray-200);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.colLabel {
+  font-size: 11px;
+  color: var(--color-gray-600);
+  padding: 4px 8px;
+  height: 25px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 500;
+}
+
+.rowNumTh, .rowNumTd {
+  width: 46px;
+  min-width: 46px;
+  max-width: 46px;
+  text-align: center;
+  background: var(--color-gray-50);
+  color: var(--color-gray-500);
+  border-right: 1px solid var(--color-gray-200);
+  position: sticky;
+  left: 0;
+  z-index: 11;
+  font-size: 11px;
+}
+
+.cornerHeader {
+  z-index: 12;
+  height: 44px;
+  background: var(--color-gray-50);
+}
+
+.cornerDiagonal {
+  width: 100%;
+  height: 100%;
+  background: radial-gradient(circle at bottom right, transparent 65%, #c4c7c5 70%, transparent 75%);
+}
+
+.rowNumTd {
+  background: var(--color-gray-50);
+  border-bottom: 1px solid var(--color-gray-200);
+  user-select: none;
+  vertical-align: middle;
+  height: 32px;
+}
+
+.rowNumTh + .th {
+  border-left: none;
+}
+
+.td {
+  border-right: 1px solid var(--color-gray-200);
+  border-bottom: 1px solid var(--color-gray-200);
+  padding: 0;
+  height: 32px;
+  min-width: 150px;
+  max-width: 220px;
+  position: relative;
+  background: var(--color-bg-surface);
+  vertical-align: middle;
+  box-sizing: border-box;
+}
+
+/* ── Selected cell outlines ── */
+.selectedCell {
+  /* Google Sheets active border outline */
+  outline: 2px solid #0f9d58 !important;
+  outline-offset: -2px;
+  z-index: 5;
+}
+
+/* Selection Fill Corner Handle */
+.selectionCornerHandle {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 5px;
+  height: 5px;
+  background-color: #0f9d58;
+  border: 1px solid #ffffff;
+  z-index: 6;
+  cursor: crosshair;
+}
+
+/* Error warning cell styling */
+.errorCell {
+  background-color: var(--color-danger-bg) !important;
+}
+
+.errorTriangle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-style: solid;
+  border-width: 0 6px 6px 0;
+  border-color: transparent #c5221f transparent transparent;
+  z-index: 4;
+  cursor: help;
+}
+
+.cellInput {
+  width: 100%;
+  height: 100%;
+  border: none;
+  outline: none;
+  padding: 0 8px;
+  font-family: inherit;
+  font-size: 13px;
+  background: var(--color-bg-surface);
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  color: var(--color-gray-900);
+}
+
+.cellValueContainer {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  padding: 0 8px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.valText {
+  color: var(--color-gray-900);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.emptyVal {
+  color: transparent;
+  user-select: none;
+}
+
+/* Error Tooltip that displays on cell hover */
+.tooltip {
+  visibility: hidden;
+  position: absolute;
+  bottom: 110%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--color-gray-900);
+  color: #ffffff;
+  text-align: left;
+  padding: 6px 10px;
+  border-radius: 4px;
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: normal;
+  width: 220px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.15s ease, visibility 0.15s ease;
+  pointer-events: none;
+}
+
+.tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: var(--color-gray-900) transparent transparent transparent;
+}
+
+.td:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* ── Bottom Sheets Tab Bar ── */
+.bottomTabBar {
+  display: flex;
+  align-items: center;
+  background: var(--color-gray-50);
+  border-top: 1px solid var(--color-gray-200);
+  height: 38px;
+  padding: 0 16px 0 0;
+  gap: 8px;
+  user-select: none;
+}
+
+.tabList {
+  display: flex;
+  align-items: flex-end;
+  height: 100%;
+}
+
+.tabItem {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-bg-surface);
+  border: none;
+  border-right: 1px solid var(--color-gray-200);
+  padding: 0 24px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #137333;
+  height: 100%;
+  position: relative;
+  z-index: 2;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.tabItemActive {
+  background: var(--color-bg-surface);
+  border-top: 3px solid #137333;
+  color: #137333;
+}
+
+.tabName {
+  white-space: nowrap;
+}
+
+.tabChevron {
+  color: var(--color-gray-500);
+}
+
+.tabBarRight {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  color: var(--color-gray-500);
+}
+
+.tabStatusText {
+  color: var(--color-gray-500);
+}
+
+.tabErrorText {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #b3261e;
+  font-weight: 500;
+}

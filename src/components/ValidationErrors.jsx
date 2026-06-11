@@ -9,7 +9,19 @@ export default function ValidationErrors({ result, filename, onReupload }) {
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [filterField, setFilterField]   = useState('all');
 
-  const { success, totalRecords, validRecords, invalidRecords, errors = [] } = result;
+  const success = result.success;
+  const totalRecords = result.totalRecords !== undefined ? result.totalRecords : result.total_records;
+  const validRecords = result.validRecords !== undefined ? result.validRecords : result.valid_records;
+  const invalidRecords = result.invalidRecords !== undefined ? result.invalidRecords : result.invalid_records;
+  
+  const errors = useMemo(() => {
+    const rawErrors = result.errors || [];
+    return rawErrors.map(e => ({
+      recId: e.recId !== undefined ? e.recId : e.rec_id,
+      fieldName: e.fieldName !== undefined ? e.fieldName : e.field_name,
+      errorMessage: e.errorMessage !== undefined ? e.errorMessage : e.error_message
+    }));
+  }, [result.errors]);
 
   // Group errors by recId
   const errorsByRow = useMemo(() => {

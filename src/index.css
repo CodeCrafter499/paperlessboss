@@ -24,6 +24,10 @@
   --color-warning:        #92400E;
   --color-warning-bg:     #FEF3C7;
 
+  /* Theme Surfaces */
+  --color-bg-surface:     #ffffff;
+  --color-bg-page:        #F9F4F7;
+
   /* Grays */
   --color-gray-50:  #F9FAFB;
   --color-gray-100: #F3F4F6;
@@ -46,13 +50,47 @@
   --shadow-lg: 0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.04);
 }
 
+:root[data-theme='dark'] {
+  --color-bg-surface:     #121214;
+  --color-bg-page:        #0c0c0e;
+  
+  --color-primary:        #FF5EA9; /* Brighter pink for dark mode contrast */
+  --color-primary-dark:   #E8419A;
+  --color-primary-darker: #C0307F;
+  --color-primary-light:  #350d22;
+  --color-primary-pale:   #2a081a;
+  
+  --color-accent:         #fce7f3;
+
+  /* Semantic - brighter for dark mode */
+  --color-success:        #4ade80;
+  --color-success-bg:     #052e16;
+  --color-danger:         #f87171;
+  --color-danger-bg:      #450a0a;
+  --color-warning:        #fbbf24;
+  --color-warning-bg:     #451a03;
+
+  /* Inverted Grays */
+  --color-gray-50:  #18181b;
+  --color-gray-100: #27272a;
+  --color-gray-200: #3f3f46;
+  --color-gray-300: #52525b;
+  --color-gray-400: #71717a;
+  --color-gray-500: #a1a1aa;
+  --color-gray-600: #d4d4d8;
+  --color-gray-700: #e4e4e7;
+  --color-gray-800: #f4f4f5;
+  --color-gray-900: #fafafa;
+}
+
 body {
   font-family: var(--font-sans);
-  background: #F9F4F7;
+  background: var(--color-bg-page);
   color: var(--color-gray-900);
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 #root { min-height: 100vh; }

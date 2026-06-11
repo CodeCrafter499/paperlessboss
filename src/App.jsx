@@ -1,22 +1,26 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { useSeo } from './hooks/useSeo';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import { RefreshCw, LogOut, User } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Image, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History } from 'lucide-react';
 
 import UploadZone from './components/UploadZone';
 import ValidationErrors from './components/ValidationErrors';
-import DataPreview from './components/DataPreview';
+import ExcelEditor from './components/ExcelEditor';
 import GeneratePanel from './components/GeneratePanel';
 import LettersList from './components/LettersList';
 import AuthPage from './components/AuthPage';
+import CompanyProfileForm from './components/CompanyProfileForm';
+import SignatoryProfileForm from './components/SignatoryProfileForm';
+import LetterheadUpload from './components/LetterheadUpload';
+import GenerationHistory from './components/GenerationHistory';
 
-import { parseExcelFile, validateRows } from './utils/excelParser';
+import { parseExcelFile, validateRows, COLUMN_MAP } from './utils/excelParser';
 import { generateDocxBlob, sanitizeFilename } from './utils/docxGenerator';
 import { generatePdfBlob } from './utils/pdfGenerator';
 import { useAuth } from './context/AuthContext';
-import { validateExcelApi } from './utils/authApi';
-import { tokenStore } from './utils/authApi';
+import { validateExcelApi, authApi, offerLetterApi } from './utils/authApi';
 
 import styles from './App.module.css';
 
@@ -46,6 +50,14 @@ export default function App() {
 
 function MainApp() {
   const { user, logout } = useAuth();
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
   // App states:
   // 'idle'       → upload zone shown
   // 'validating' → calling /validate-excel API
@@ -56,7 +68,6 @@ function MainApp() {
   const [state, setState]             = useState('idle');
   const [rows, setRows]               = useState([]);
   const [filename, setFilename]       = useState('');
-  const [currentFile, setCurrentFile] = useState(null);
   const [warnings, setWarnings]       = useState([]);
   const [parseError, setParseError]   = useState('');
   const [genProgress, setGenProgress] = useState(0);
@@ -64,6 +75,10 @@ function MainApp() {
   const [isZipping, setIsZipping]     = useState(false);
   const [format, setFormat]           = useState('both');
   const [validationResult, setValidationResult] = useState(null);
+  
+  // Settings / Integration States
+  const [activeTab, setActiveTab]     = useState('generator'); // 'generator', 'company', 'signatory', 'letterhead'
+  const [genMode, setGenMode]         = useState('client'); // 'client' or 'server'
 
   // ── SEO: authenticated main app ─────────────────────────────────────
   useSeo({
@@ -72,32 +87,72 @@ function MainApp() {
     noIndex: false,
   });
 
+  const handleLogout = useCallback(async () => {
+    try {
+      await authApi.logout();
+    } catch (err) {
+      console.error('Backend logout failed:', err);
+    }
+    logout();
+  }, [logout]);
+
+  const handleCreateBlank = useCallback(() => {
+    setParseError('');
+    setGeneratedFiles([]);
+    setValidationResult(null);
+    setFilename('New_Employee_List.xlsx');
+    
+    const blankRow = {
+      _rowIndex: 2,
+      employeeName: '',
+      dateOfBirth: '',
+      parentName: '',
+      aadhaarNumber: '',
+      linNumber: '',
+      uanEsic: '',
+      designation: '',
+      employmentType: '',
+      skillCategory: '',
+      dateOfJoining: '',
+      basicPay: '',
+      dearnessAllowance: '',
+      otherAllowance: '',
+      socialSecurity: '',
+      duties: '',
+      maternityBenefits: '',
+      otherInfo: ''
+    };
+    
+    setRows([blankRow]);
+    setWarnings([]);
+    setState('previewing');
+  }, []);
+
   const handleFile = useCallback(async (file) => {
     setParseError('');
     setRows([]);
     setGeneratedFiles([]);
     setValidationResult(null);
     setFilename(file.name);
-    setCurrentFile(file);
     setState('validating');
 
     try {
-      // Step 1: Server-side validation via /validate-excel API
-      const token = tokenStore.get();
-      const result = await validateExcelApi(file, token);
-      setValidationResult(result);
-
-      if (!result.success) {
-        // Has validation errors — show error panel, block generation
-        setState('invalid');
-        return;
-      }
-
-      // Step 2: Validation passed — parse locally for preview
+      // Step 1: Parse locally first so the grid editor always has data loaded
       const { rows: parsed } = await parseExcelFile(file);
       const warns = validateRows(parsed);
       setRows(parsed);
       setWarnings(warns);
+
+      // Step 2: Server-side validation via /validate-excel API
+      const result = await validateExcelApi(file);
+      const normalizedResult = result.validation_result || result;
+      setValidationResult(normalizedResult);
+
+      if (!normalizedResult.success) {
+        setState('invalid');
+        return;
+      }
+
       setState('previewing');
     } catch (err) {
       setParseError(err.message || 'Validation failed. Please try again.');
@@ -105,10 +160,63 @@ function MainApp() {
     }
   }, []);
 
+  const handleRevalidate = useCallback(async (updatedRows) => {
+    setParseError('');
+    setValidationResult(null);
+
+    try {
+      // Dynamic import of xlsx just in case, but since it's already imported at top we can use XLSX directly
+      // Re-map keys back to excel headers
+      const reverseMap = {};
+      for (const [excelCol, fieldKey] of Object.entries(COLUMN_MAP)) {
+        reverseMap[fieldKey] = excelCol;
+      }
+
+      // Reconstruct raw data list
+      const rawData = updatedRows.map(row => {
+        const rawRow = {};
+        for (const [fieldKey, val] of Object.entries(row)) {
+          if (fieldKey === '_rowIndex') continue;
+          const excelCol = reverseMap[fieldKey];
+          if (excelCol) {
+            rawRow[excelCol] = val;
+          }
+        }
+        return rawRow;
+      });
+
+      // Write workbook in memory
+      const worksheet = XLSX.utils.json_to_sheet(rawData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Employees');
+      const excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const fileBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const file = new File([fileBlob], filename || 'edited_employees.xlsx', { type: fileBlob.type });
+
+      // Run server-side validation on edited file
+      const result = await validateExcelApi(file);
+      const normalizedResult = result.validation_result || result;
+      setValidationResult(normalizedResult);
+
+      // Validate warnings locally
+      const warns = validateRows(updatedRows);
+      setWarnings(warns);
+      setRows(updatedRows);
+
+      if (normalizedResult.success) {
+        setState('previewing');
+      } else {
+        setState('invalid');
+      }
+    } catch (err) {
+      setParseError(err.message || 'Validation failed. Please try again.');
+      setState('invalid');
+    }
+  }, [filename]);
+
   const handleReupload = useCallback(() => {
     setState('idle');
     setRows([]);
-    setCurrentFile(null);
     setFilename('');
     setValidationResult(null);
     setParseError('');
@@ -118,13 +226,79 @@ function MainApp() {
   const handleGenerate = useCallback(async () => {
     setState('generating');
     setGenProgress(0);
-    const files = [];
 
+    if (genMode === 'server') {
+      try {
+        await offerLetterApi.generateServer();
+        
+        // Setup polling interval
+        const pollInterval = setInterval(async () => {
+          try {
+            const statusRes = await offerLetterApi.getStatus();
+            setGenProgress(statusRes.ready_count);
+
+            if (statusRes.ready_count === statusRes.total_employees) {
+              clearInterval(pollInterval);
+              const mappedFiles = statusRes.employees.map(emp => ({
+                id: emp.employee_id,
+                name: emp.employee_name,
+                designation: '',
+                safeName: sanitizeFilename(emp.employee_name),
+                docxBlob: null,
+                pdfBlob: null,
+                docxFilename: `Appointment_${sanitizeFilename(emp.employee_name)}.docx`,
+                pdfFilename: `Appointment_${sanitizeFilename(emp.employee_name)}.pdf`,
+                serverReady: emp.ready,
+              }));
+              setGeneratedFiles(mappedFiles);
+              setState('done');
+            }
+          } catch (pollErr) {
+            console.error('Error polling offer letters status:', pollErr);
+            clearInterval(pollInterval);
+            setParseError(pollErr.message || 'Offer letter generation status polling failed.');
+            setState('previewing');
+          }
+        }, 2000);
+      } catch (err) {
+        setParseError(err.message || 'Failed to trigger server-side offer letter generation. Check profiles.');
+        setState('previewing');
+      }
+      return;
+    }
+
+    // Helper to convert date to ISO
+    const convertToIsoDate = (dStr) => {
+      if (!dStr) return null;
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dStr)) return dStr;
+      const parts = dStr.split(/[/-]/);
+      if (parts.length === 3) {
+        let day = parts[0];
+        let month = parts[1];
+        let year = parts[2];
+        if (year.length === 4) {
+          return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+        } else if (day.length === 4) {
+          return `${day}-${month.padStart(2, '0')}-${year.padStart(2, '0')}`;
+        }
+      }
+      try {
+        const d = new Date(dStr);
+        if (!isNaN(d.getTime())) {
+          return d.toISOString().split('T')[0];
+        }
+      } catch (e) {}
+      return null;
+    };
+
+    // Local Generation (Client-Side)
+    const files = [];
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
       const safeName = sanitizeFilename(row.employeeName);
       const entry = {
         name: row.employeeName || `Employee ${i + 1}`,
+        linNumber: row.linNumber || '',
         designation: row.designation || '',
         dateOfJoining: row.dateOfJoining || '',
         safeName,
@@ -142,28 +316,97 @@ function MainApp() {
       await new Promise(r => setTimeout(r, 0));
     }
 
-    setGeneratedFiles(files);
-    setState('done');
-  }, [rows, format]);
+    // Log generation to backend history
+    let loggedLogs = [];
+    try {
+      const payloadLogs = rows.map(row => ({
+        employee_name: row.employeeName || 'Unknown',
+        lin_number: row.linNumber || '',
+        designation: row.designation || null,
+        date_of_joining: convertToIsoDate(row.dateOfJoining) || null,
+        format: format,
+      }));
+      const logRes = await offerLetterApi.logGeneration(payloadLogs);
+      if (logRes && logRes.logs) {
+        loggedLogs = logRes.logs;
+      }
+    } catch (logErr) {
+      console.error('Failed to log generated letters:', logErr);
+    }
 
-  const handleDownloadOne = useCallback((index, type) => {
+    const filesWithLogIds = files.map(file => {
+      const matchedLog = loggedLogs.find(l => l.lin_number === file.linNumber);
+      return {
+        ...file,
+        logId: matchedLog ? matchedLog.id : null,
+      };
+    });
+
+    setGeneratedFiles(filesWithLogIds);
+    setState('done');
+  }, [rows, format, genMode]);
+
+  const handleDownloadOne = useCallback(async (index, type) => {
     const f = generatedFiles[index];
+    if (genMode === 'server') {
+      try {
+        const blob = await offerLetterApi.downloadFile(f.id, type);
+        saveAs(blob, type === 'docx' ? f.docxFilename : f.pdfFilename);
+      } catch (err) {
+        alert(`Failed to download file from server: ${err.message}`);
+      }
+      return;
+    }
     if (type === 'docx' && f.docxBlob) saveAs(f.docxBlob, f.docxFilename);
     if (type === 'pdf'  && f.pdfBlob)  saveAs(f.pdfBlob,  f.pdfFilename);
-  }, [generatedFiles]);
+
+    if (f.logId) {
+      offerLetterApi.markDownloaded(f.logId).catch(err => {
+        console.error('Failed to mark log as downloaded:', err);
+      });
+    }
+  }, [generatedFiles, genMode]);
 
   const handleDownloadAll = useCallback(async (type) => {
     setIsZipping(true);
     const zip = new JSZip();
     const folder = zip.folder('Appointment_Letters');
-    generatedFiles.forEach(f => {
-      if (type !== 'pdf'  && f.docxBlob) folder.file(f.docxFilename, f.docxBlob);
-      if (type !== 'docx' && f.pdfBlob)  folder.file(f.pdfFilename,  f.pdfBlob);
-    });
+
+    if (genMode === 'server') {
+      try {
+        for (let i = 0; i < generatedFiles.length; i++) {
+          const f = generatedFiles[i];
+          if (type !== 'pdf') {
+            const docxBlob = await offerLetterApi.downloadFile(f.id, 'docx');
+            folder.file(f.docxFilename, docxBlob);
+          }
+          if (type !== 'docx') {
+            const pdfBlob = await offerLetterApi.downloadFile(f.id, 'pdf');
+            folder.file(f.pdfFilename, pdfBlob);
+          }
+        }
+      } catch (err) {
+        alert(`Failed to compile all letters from server: ${err.message}`);
+        setIsZipping(false);
+        return;
+      }
+    } else {
+      generatedFiles.forEach(f => {
+        if (type !== 'pdf'  && f.docxBlob) folder.file(f.docxFilename, f.docxBlob);
+        if (type !== 'docx' && f.pdfBlob)  folder.file(f.pdfFilename,  f.pdfBlob);
+
+        if (f.logId) {
+          offerLetterApi.markDownloaded(f.logId).catch(err => {
+            console.error('Failed to mark log as downloaded:', err);
+          });
+        }
+      });
+    }
+
     const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
     saveAs(zipBlob, `Appointment_Letters_${type === 'both' ? 'All' : type.toUpperCase()}.zip`);
     setIsZipping(false);
-  }, [generatedFiles]);
+  }, [generatedFiles, genMode]);
 
   const handleReset = useCallback(() => {
     setState('idle');
@@ -171,88 +414,273 @@ function MainApp() {
     setParseError(''); setGenProgress(0); setGeneratedFiles([]);
   }, []);
 
+  // Get active tab title for the main header bar
+  const tabTitles = {
+    generator: 'Generate Offer Letters',
+    company: 'Company Profile Settings',
+    signatory: 'Authorised Signatory Details',
+    letterhead: 'Company Letterhead Template',
+    history: 'Generation History Log',
+  };
+
   return (
     <div className={styles.page}>
-      <header className={styles.nav}>
-        <div className={styles.navInner}>
-          <div className={styles.brand}>
-            <div className={styles.brandIcon}><img src={LOGO_SRC} alt="PaperlessBoss" /></div>
-            <span className={styles.brandName}>PaperlessBoss</span>
-            <span className={styles.brandSub}>CodeCrafters Inc</span>
+      {/* Sidebar Navigation */}
+      <aside className={styles.sidebar}>
+        <div className={styles.sidebarBrand}>
+          <div className={styles.brandIcon}><img src={LOGO_SRC} alt="PaperlessBoss" /></div>
+          <div>
+            <div className={styles.brandName}>PaperlessBoss</div>
+            <div className={styles.brandSub}>CodeCrafters Inc</div>
           </div>
-          <div className={styles.navRight}>
-            {state !== 'idle' && (
-              <button className={styles.resetBtn} onClick={handleReset} aria-label="Start over">
-                <RefreshCw size={14} /> Start Over
-              </button>
-            )}
-            <div className={styles.userChip}>
-              <User size={13} />
-              <span className={styles.userEmail}>{user?.email || 'User'}</span>
-            </div>
-            <button className={styles.logoutBtn} onClick={logout} title="Sign out">
+        </div>
+
+        <nav className={styles.navGroup}>
+          <button 
+            type="button"
+            className={`${styles.navItem} ${activeTab === 'generator' ? styles.navItemActive : ''}`}
+            onClick={() => setActiveTab('generator')}
+          >
+            <FileSpreadsheet size={16} />
+            <span>Generate Letters</span>
+          </button>
+          <button 
+            type="button"
+            className={`${styles.navItem} ${activeTab === 'company' ? styles.navItemActive : ''}`}
+            onClick={() => setActiveTab('company')}
+          >
+            <Building2 size={16} />
+            <span>Company Profile</span>
+          </button>
+          <button 
+            type="button"
+            className={`${styles.navItem} ${activeTab === 'signatory' ? styles.navItemActive : ''}`}
+            onClick={() => setActiveTab('signatory')}
+          >
+            <User size={16} />
+            <span>Authorised Signatory</span>
+          </button>
+          <button 
+            type="button"
+            className={`${styles.navItem} ${activeTab === 'letterhead' ? styles.navItemActive : ''}`}
+            onClick={() => setActiveTab('letterhead')}
+          >
+            <Image size={16} />
+            <span>Letterhead PDF</span>
+          </button>
+          <button 
+            type="button"
+            className={`${styles.navItem} ${activeTab === 'history' ? styles.navItemActive : ''}`}
+            onClick={() => setActiveTab('history')}
+          >
+            <History size={16} />
+            <span>Generation History</span>
+          </button>
+        </nav>
+
+        <div className={styles.sidebarFooter}>
+          <div className={styles.sidebarUser} title={user?.email || 'User'}>
+            <User size={14} style={{ flexShrink: 0 }} />
+            <span className={styles.sidebarUserEmail}>{user?.email || 'User'}</span>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+            <button 
+              type="button" 
+              className={styles.themeToggleBtn} 
+              onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+              <span>{theme === 'light' ? 'Dark' : 'Light'}</span>
+            </button>
+            <button type="button" className={styles.sidebarLogoutBtn} onClick={handleLogout} title="Sign out">
               <LogOut size={14} />
               <span>Sign out</span>
             </button>
           </div>
         </div>
-      </header>
+      </aside>
 
-      <main className={styles.main}>
-        <div className={styles.container}>
-          <StepIndicator current={state} />
-
-          {/* Upload zone — shown when idle */}
-          {(state === 'idle' || state === 'validating') && (
-            <UploadZone
-              onFileParsed={handleFile}
-              isParsing={state === 'validating'}
-              isValidating={state === 'validating'}
-              error={parseError}
-            />
+      {/* Main Workspace Content */}
+      <div className={styles.mainContent}>
+        <header className={styles.contentHeader}>
+          <h1 className={styles.contentTitle}>{tabTitles[activeTab] || 'Dashboard'}</h1>
+          {state !== 'idle' && activeTab === 'generator' && (
+            <button className={styles.resetBtn} onClick={handleReset} aria-label="Start over">
+              <RefreshCw size={13} />
+              <span>Start Over</span>
+            </button>
           )}
+        </header>
 
-          {/* Validation failed — show errors, block generation */}
-          {state === 'invalid' && validationResult && (
-            <ValidationErrors
-              result={validationResult}
-              filename={filename}
-              onReupload={handleReupload}
-            />
-          )}
+        <main className={styles.workspace}>
+          <div className={styles.container}>
+            <div style={{ display: activeTab === 'company' ? 'block' : 'none' }}>
+              <CompanyProfileForm />
+            </div>
+            <div style={{ display: activeTab === 'signatory' ? 'block' : 'none' }}>
+              <SignatoryProfileForm />
+            </div>
+            <div style={{ display: activeTab === 'letterhead' ? 'block' : 'none' }}>
+              <LetterheadUpload active={activeTab === 'letterhead'} />
+            </div>
+            <div style={{ display: activeTab === 'history' ? 'block' : 'none' }}>
+              <GenerationHistory active={activeTab === 'history'} />
+            </div>
 
-          {/* Validation passed — show preview + generate panel */}
-          {(state === 'previewing' || state === 'generating') && (
-            <>
-              <DataPreview rows={rows} filename={filename} warnings={warnings} />
-              <GeneratePanel
-                total={rows.length} progress={genProgress}
-                isGenerating={state === 'generating'}
-                format={format} onFormatChange={setFormat} onGenerate={handleGenerate}
-                validationPassed={true}
-              />
-            </>
-          )}
+            <div style={{ display: activeTab === 'generator' ? 'block' : 'none' }}>
+              <StepIndicator current={state} />
 
-          {/* Letters generated — download panel */}
-          {state === 'done' && (
-            <>
-              <DataPreview rows={rows} filename={filename} warnings={warnings} />
-              <LettersList
-                files={generatedFiles} format={format}
-                onDownloadOne={handleDownloadOne} onDownloadAll={handleDownloadAll}
-                isZipping={isZipping}
-              />
-            </>
-          )}
+              {/* Upload or Create Blank Sheet option cards — shown when idle */}
+              {state === 'idle' && (
+                <div className={styles.selectionGrid}>
+                  <UploadZone
+                    onFileParsed={handleFile}
+                    isParsing={false}
+                    isValidating={false}
+                    error={parseError}
+                  />
+                  <div 
+                    className={styles.blankCard}
+                    onClick={handleCreateBlank}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateBlank()}
+                  >
+                    <div className={styles.blankIconWrap}>
+                      <Plus size={28} />
+                    </div>
+                    <h3 className={styles.blankTitle}>Start with Blank Sheet</h3>
+                    <p className={styles.blankText}>
+                      Write and edit employee details from scratch directly in the web editor without uploading.
+                    </p>
+                    <button type="button" className={styles.blankAction}>
+                      <Plus size={14} />
+                      <span>Create Blank Sheet</span>
+                    </button>
+                  </div>
+                </div>
+              )}
 
-          {state === 'idle' && <HelpCard />}
-        </div>
-      </main>
+              {/* Show Loading state when validating uploaded file */}
+              {state === 'validating' && (
+                <UploadZone
+                  onFileParsed={handleFile}
+                  isParsing={true}
+                  isValidating={true}
+                  error={parseError}
+                />
+              )}
 
-      <footer className={styles.footer}>
-        <p>© PaperlessBoss · NLC India Renewables Limited &nbsp;|&nbsp; Code on Wages, 2019 &amp; Code on Social Security, 2020</p>
-      </footer>
+              {/* Validation failed — show errors, block generation */}
+              {state === 'invalid' && (
+                <>
+                  {validationResult ? (
+                    <ValidationErrors
+                      result={validationResult}
+                      filename={filename}
+                      onReupload={handleReupload}
+                    />
+                  ) : (
+                    parseError && (
+                      <div style={{
+                        padding: '1rem',
+                        backgroundColor: '#fde8e8',
+                        border: '1px solid #f8b4b4',
+                        borderRadius: '6px',
+                        color: '#c53030',
+                        marginBottom: '1rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                        fontSize: '0.9rem',
+                        fontWeight: '500'
+                      }}>
+                        <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                        <span>{parseError}</span>
+                      </div>
+                    )
+                  )}
+                  <ExcelEditor 
+                    rows={rows} 
+                    setRows={setRows} 
+                    filename={filename} 
+                    warnings={warnings} 
+                    validationResult={validationResult} 
+                    onRevalidate={handleRevalidate} 
+                  />
+                </>
+              )}
+
+              {/* Validation passed — show preview + generate panel */}
+              {(state === 'previewing' || state === 'generating') && (
+                <>
+                  {validationResult && validationResult.success && (
+                    <div style={{
+                      padding: '1rem',
+                      backgroundColor: '#def7ec',
+                      border: '1px solid #bcf0da',
+                      borderRadius: '6px',
+                      color: '#03543f',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}>
+                      <CheckCircle2 size={16} style={{ flexShrink: 0 }} />
+                      <span>Successfully validated all the records</span>
+                    </div>
+                  )}
+                  <ExcelEditor 
+                    rows={rows} 
+                    setRows={setRows} 
+                    filename={filename} 
+                    warnings={warnings} 
+                    validationResult={validationResult} 
+                    onRevalidate={handleRevalidate} 
+                    isGenerating={state === 'generating'} 
+                  />
+                  <GeneratePanel
+                    total={rows.length} progress={genProgress}
+                    isGenerating={state === 'generating'}
+                    format={format} onFormatChange={setFormat} onGenerate={handleGenerate}
+                    validationPassed={true}
+                    genMode={genMode} onGenModeChange={setGenMode}
+                  />
+                </>
+              )}
+
+              {/* Letters generated — download panel */}
+              {state === 'done' && (
+                <>
+                  <ExcelEditor 
+                    rows={rows} 
+                    setRows={setRows} 
+                    filename={filename} 
+                    warnings={warnings} 
+                    validationResult={validationResult} 
+                    onRevalidate={handleRevalidate} 
+                    isReadOnly={true} 
+                  />
+                  <LettersList
+                    files={generatedFiles} format={format}
+                    onDownloadOne={handleDownloadOne} onDownloadAll={handleDownloadAll}
+                    isZipping={isZipping}
+                  />
+                </>
+              )}
+
+              {state === 'idle' && <HelpCard />}
+            </div>
+          </div>
+        </main>
+
+        <footer className={styles.footer}>
+          <p>© PaperlessBoss · NLC India Renewables Limited &nbsp;|&nbsp; Code on Wages, 2019 &amp; Code on Social Security, 2020</p>
+        </footer>
+      </div>
     </div>
   );
 }

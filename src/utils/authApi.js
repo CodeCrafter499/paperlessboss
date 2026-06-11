@@ -1,11 +1,81 @@
-const BASE_URL = 'https://paperlessboss.com/api/v1/auth';
+const getBaseApiUrl = () => {
+  if (process.env.REACT_APP_API_BASE_URL) {
+    return process.env.REACT_APP_API_BASE_URL;
+  }
+  return 'https://paperlessboss.com';
+};
 
-async function request(endpoint, options = {}) {
-  const res = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
+
+export const BASE_API = getBaseApiUrl();
+const BASE_URL = `${BASE_API}/api/v1/auth`;
+
+// Token helpers
+export const tokenStore = {
+  get: () => localStorage.getItem('pb_access_token'),
+  set: (t) => localStorage.setItem('pb_access_token', t),
+  clear: () => localStorage.removeItem('pb_access_token'),
+};
+
+async function request(url, options = {}, isAuthEndpoint = true) {
+  const token = tokenStore.get();
+  const headers = { ...options.headers };
+  
+  if (token && !headers.Authorization) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+  
+  if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
+
+  const fullUrl = isAuthEndpoint ? `${BASE_URL}${url}` : `${BASE_API}${url}`;
+
+  let res = await fetch(fullUrl, {
+    credentials: 'include',
     ...options,
+    headers,
   });
-  const data = await res.json();
+
+  if (res.status === 401 && token && url !== '/refresh' && url !== '/login') {
+    try {
+      const refreshRes = await fetch(`${BASE_URL}/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (refreshRes.ok) {
+        const refreshData = await refreshRes.json();
+        if (refreshData.access_token) {
+          tokenStore.set(refreshData.access_token);
+          headers.Authorization = `Bearer ${refreshData.access_token}`;
+          res = await fetch(fullUrl, {
+            credentials: 'include',
+            ...options,
+            headers,
+          });
+        }
+      } else {
+        tokenStore.clear();
+      }
+    } catch (e) {
+      console.error('Failed to auto-refresh token:', e);
+    }
+  }
+
+  if (options.responseType === 'blob') {
+    if (!res.ok) {
+      const text = await res.text().catch(() => '');
+      let detail = 'File download failed';
+      try {
+        const errJson = JSON.parse(text);
+        detail = errJson.detail || errJson.message || detail;
+      } catch (_) {}
+      throw new Error(detail);
+    }
+    return await res.blob();
+  }
+
+  const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     throw new Error(data.detail || data.message || 'Something went wrong');
   }
@@ -27,50 +97,66 @@ export const authApi = {
 
   getProfile: (token) =>
     request('/me', { method: 'GET', headers: { Authorization: `Bearer ${token}` } }),
+
+  logout: () =>
+    request('/logout', { method: 'POST' }),
 };
 
-// Token helpers
-export const tokenStore = {
-  get: () => localStorage.getItem('pb_access_token'),
-  set: (t) => localStorage.setItem('pb_access_token', t),
-  clear: () => localStorage.removeItem('pb_access_token'),
+export const profileApi = {
+  getCompany: () =>
+    request('/api/v1/profile/company', { method: 'GET' }, false),
+
+  upsertCompany: (data) =>
+    request('/api/v1/profile/company', { method: 'POST', body: JSON.stringify(data) }, false),
+
+  getSignatory: () =>
+    request('/api/v1/profile/signatory', { method: 'GET' }, false),
+
+  upsertSignatory: (data) =>
+    request('/api/v1/profile/signatory', { method: 'POST', body: JSON.stringify(data) }, false),
+
+  uploadLetterhead: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request('/api/v1/profile/company/letterhead', {
+      method: 'POST',
+      body: formData,
+    }, false);
+  },
 };
 
+export const offerLetterApi = {
+  generateServer: () =>
+    request('/api/v1/offer-letters/generate', { method: 'POST' }, false),
 
-// ── Excel Validation API ───────────────────────────────────────────────────
-const BASE_API = 'https://paperlessboss.com';
+  getStatus: () =>
+    request('/api/v1/offer-letters/status', { method: 'GET' }, false),
 
-export async function validateExcelApi(file, token) {
+  downloadFile: (employeeId, format) =>
+    request(`/api/v1/offer-letters/download/${employeeId}/${format}`, {
+      method: 'GET',
+      responseType: 'blob',
+    }, false),
+
+  logGeneration: (logs) =>
+    request('/api/v1/offer-letters/log-generation', {
+      method: 'POST',
+      body: JSON.stringify({ logs })
+    }, false),
+
+  markDownloaded: (logId) =>
+    request(`/api/v1/offer-letters/log/${logId}/download`, { method: 'POST' }, false),
+
+  getGenerationHistory: () =>
+    request('/api/v1/offer-letters/generation-history', { method: 'GET' }, false),
+};
+
+export async function validateExcelApi(file) {
   const formData = new FormData();
   formData.append('file', file);
-
-  const res = await fetch(`${BASE_API}/validate-excel`, {
+  return request('/validate-excel', {
     method: 'POST',
-    headers: { Authorization: `Bearer ${token}` },
     body: formData,
-    // Note: Do NOT set Content-Type — browser sets multipart boundary automatically
-  });
-
-  const data = await res.json().catch(() => ({}));
-
-  if (!res.ok) {
-    // The API returns validation errors as a 4xx with body:
-    // { detail: { message: "...", validation_result: { success, totalRecords, ... } } }
-    // Extract and return the validation_result so the UI can display errors in a table.
-    const validationResult = data?.detail?.validation_result;
-    if (validationResult) {
-      return validationResult;
-    }
-    // For non-validation errors (auth, network, etc.), surface a readable message
-    const message =
-      (typeof data?.detail === 'string' ? data.detail : null) ||
-      data?.detail?.message ||
-      data?.message ||
-      `Validation failed (${res.status})`;
-    throw new Error(message);
-  }
-
-  // Success: { message, validation_result: {...} } → normalise to flat shape
-  return data.validation_result ?? data;
-  // Shape: { success, totalRecords, validRecords, invalidRecords, errors[] }
+  }, false);
 }
+
