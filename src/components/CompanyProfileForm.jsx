@@ -47,7 +47,15 @@ export default function CompanyProfileForm() {
   }, []);
 
   const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    // Apply dynamic alphanumeric/numeric controls
+    if (name === 'gstin' || name === 'pan' || name === 'cin' || name === 'labour_identification_number') {
+      value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    } else if (name === 'mobile_no') {
+      value = value.replace(/[^0-9]/g, '');
+    }
+
     setFormData((prev) => {
       const next = { ...prev, [name]: value };
       
@@ -194,6 +202,7 @@ export default function CompanyProfileForm() {
                 placeholder="Acme Technologies Ltd"
                 className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={255}
               />
             </div>
             {errors.name && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.name}</span>}
@@ -212,6 +221,7 @@ export default function CompanyProfileForm() {
                 placeholder="LABOUR998877"
                 className={styles.input}
                 disabled={saving}
+                maxLength={255}
               />
             </div>
           </div>
@@ -229,6 +239,7 @@ export default function CompanyProfileForm() {
                 placeholder="37ABCDE1234F1ZK"
                 className={`${styles.input} ${errors.gstin ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={15}
               />
             </div>
             {errors.gstin && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.gstin}</span>}
@@ -247,6 +258,7 @@ export default function CompanyProfileForm() {
                 placeholder="ABCDE1234F"
                 className={`${styles.input} ${errors.pan ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={10}
               />
             </div>
             {errors.pan && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.pan}</span>}
@@ -265,6 +277,7 @@ export default function CompanyProfileForm() {
                 placeholder="L17110MH1973PLC019786"
                 className={`${styles.input} ${errors.cin ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={21}
               />
             </div>
             {errors.cin && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.cin}</span>}
@@ -283,6 +296,7 @@ export default function CompanyProfileForm() {
                 placeholder="9876543210"
                 className={styles.input}
                 disabled={saving}
+                maxLength={10}
               />
             </div>
           </div>
@@ -300,6 +314,7 @@ export default function CompanyProfileForm() {
                 placeholder="corporate@acme.com"
                 className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={255}
               />
             </div>
             {errors.email && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.email}</span>}
@@ -320,12 +335,22 @@ export default function CompanyProfileForm() {
                 className={styles.input}
                 style={{ paddingLeft: '12px', minHeight: '60px', resize: 'vertical' }}
                 disabled={saving}
+                maxLength={1000}
               />
             </div>
           </div>
         </div>
 
         <div className={styles.actions}>
+          {status.message && (
+            <div className={`${styles.statusMessageInline} ${
+              status.type === 'success' ? styles.statusSuccess :
+              status.type === 'info' ? styles.statusInfo : styles.statusError
+            }`}>
+              {status.type === 'success' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+              <span>{status.message}</span>
+            </div>
+          )}
           <button type="submit" className={styles.btn} disabled={saving}>
             {saving ? <><Loader2 className={styles.loadingSpinner} /> Saving Profile…</> : 'Save Company Details'}
           </button>

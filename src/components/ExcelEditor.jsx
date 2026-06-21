@@ -79,8 +79,16 @@ export default function ExcelEditor({
   useEffect(() => {
     if (editingCell && inputRef.current) {
       inputRef.current.focus();
-      inputRef.current.select();
+      const { rowIndex, colIndex } = editingCell;
+      const originalValue = rows[rowIndex]?.[COLS[colIndex].key] || '';
+      if (editValue === originalValue) {
+        inputRef.current.select();
+      } else {
+        const len = editValue.length;
+        inputRef.current.setSelectionRange(len, len);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingCell]);
 
   // Commits active edits

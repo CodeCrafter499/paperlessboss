@@ -23,9 +23,14 @@
 .sidebarBrand {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
   margin-bottom: 32px;
   padding: 0 8px;
+}
+
+.mobileHeaderControls {
+  display: none;
 }
 
 .brandIcon {
@@ -75,7 +80,7 @@
   font-weight: 600;
   color: var(--color-gray-500);
   cursor: pointer;
-  transition: all 0.12s ease;
+  transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -93,6 +98,7 @@
   background: var(--color-primary);
   border-color: var(--color-primary-dark);
   box-shadow: 0 2px 4px rgba(232, 65, 154, 0.15);
+  transition: none !important;
 }
 
 .sidebarFooter {
@@ -400,6 +406,38 @@
 
   .sidebarBrand {
     margin-bottom: 16px;
+    width: 100%;
+  }
+
+  .mobileHeaderControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .mobileActionBtn {
+    background: var(--color-bg-surface);
+    border: 1px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    padding: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-600);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .mobileActionBtn:hover {
+    background: var(--color-primary-pale);
+    color: var(--color-primary);
+    border-color: var(--color-primary-mid);
+  }
+
+  .mobileLogoutBtn:hover {
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border-color: var(--color-danger);
   }
 
   .navGroup {
@@ -407,6 +445,12 @@
     overflow-x: auto;
     padding-bottom: 8px;
     gap: 8px;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+
+  .navGroup::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for Chrome, Safari and Opera */
   }
 
   .navItem {

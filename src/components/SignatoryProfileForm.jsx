@@ -41,7 +41,14 @@ export default function SignatoryProfileForm() {
   }, []);
 
   const handleChange = useCallback((e) => {
-    const { name, value } = e.target;
+    let { name, value } = e.target;
+    
+    if (name === 'pan') {
+      value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    } else if (name === 'mobile_no') {
+      value = value.replace(/[^0-9]/g, '');
+    }
+    
     setFormData((prev) => ({ ...prev, [name]: value }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
   }, []);
@@ -148,6 +155,7 @@ export default function SignatoryProfileForm() {
                 placeholder="Johnathan Doe"
                 className={`${styles.input} ${errors.name ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={255}
               />
             </div>
             {errors.name && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.name}</span>}
@@ -166,6 +174,7 @@ export default function SignatoryProfileForm() {
                 placeholder="XYZAB1234C"
                 className={`${styles.input} ${errors.pan ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={10}
               />
             </div>
             {errors.pan && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.pan}</span>}
@@ -184,6 +193,7 @@ export default function SignatoryProfileForm() {
                 placeholder="9876543211"
                 className={styles.input}
                 disabled={saving}
+                maxLength={10}
               />
             </div>
           </div>
@@ -201,6 +211,7 @@ export default function SignatoryProfileForm() {
                 placeholder="john.doe@acme.com"
                 className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
                 disabled={saving}
+                maxLength={255}
               />
             </div>
             {errors.email && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.email}</span>}
@@ -221,12 +232,22 @@ export default function SignatoryProfileForm() {
                 className={styles.input}
                 style={{ paddingLeft: '12px', minHeight: '60px', resize: 'vertical' }}
                 disabled={saving}
+                maxLength={1000}
               />
             </div>
           </div>
         </div>
 
         <div className={styles.actions}>
+          {status.message && (
+            <div className={`${styles.statusMessageInline} ${
+              status.type === 'success' ? styles.statusSuccess :
+              status.type === 'info' ? styles.statusInfo : styles.statusError
+            }`}>
+              {status.type === 'success' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
+              <span>{status.message}</span>
+            </div>
+          )}
           <button type="submit" className={styles.btn} disabled={saving}>
             {saving ? <><Loader2 className={styles.loadingSpinner} /> Saving details…</> : 'Save Signatory Details'}
           </button>

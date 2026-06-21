@@ -428,10 +428,32 @@ function MainApp() {
       {/* Sidebar Navigation */}
       <aside className={styles.sidebar}>
         <div className={styles.sidebarBrand}>
-          <div className={styles.brandIcon}><img src={LOGO_SRC} alt="PaperlessBoss" /></div>
-          <div>
-            <div className={styles.brandName}>PaperlessBoss</div>
-            <div className={styles.brandSub}>CodeCrafters Inc</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div className={styles.brandIcon}><img src={LOGO_SRC} alt="PaperlessBoss" /></div>
+            <div>
+              <div className={styles.brandName}>PaperlessBoss</div>
+              <div className={styles.brandSub}>CodeCrafters Inc</div>
+            </div>
+          </div>
+          
+          {/* Mobile-only header controls */}
+          <div className={styles.mobileHeaderControls}>
+            <button 
+              type="button" 
+              className={styles.mobileActionBtn} 
+              onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+            >
+              {theme === 'light' ? <Moon size={14} /> : <Sun size={14} />}
+            </button>
+            <button 
+              type="button" 
+              className={`${styles.mobileActionBtn} ${styles.mobileLogoutBtn}`} 
+              onClick={handleLogout} 
+              title="Sign out"
+            >
+              <LogOut size={14} />
+            </button>
           </div>
         </div>
 

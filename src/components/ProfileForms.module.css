@@ -43,8 +43,31 @@
 }
 
 @media (max-width: 600px) {
+  .card {
+    padding: 16px;
+  }
   .grid {
     grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .field {
+    grid-column: span 1 !important;
+  }
+  .actions {
+    justify-content: stretch;
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .statusMessageInline {
+    margin-right: 0;
+    justify-content: center;
+    width: 100%;
+  }
+  .btn {
+    width: 100%;
+    justify-content: center;
   }
 }
 
@@ -122,7 +145,21 @@
 .actions {
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  gap: 16px;
   margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.statusMessageInline {
+  padding: 8px 16px;
+  border-radius: var(--radius-md);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  animation: fadeIn 0.2s ease-out;
 }
 
 .btn {

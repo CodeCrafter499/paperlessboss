@@ -251,7 +251,7 @@
 /* ── Grid Canvas ── */
 .gridWrapper {
   overflow: auto;
-  max-height: 480px;
+  max-height: 320px;
   outline: none;
   background: var(--color-bg-surface);
   border-bottom: 1px solid var(--color-gray-200);
