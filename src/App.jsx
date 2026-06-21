@@ -78,7 +78,7 @@ function MainApp() {
   
   // Settings / Integration States
   const [activeTab, setActiveTab]     = useState('generator'); // 'generator', 'company', 'signatory', 'letterhead'
-  const [genMode, setGenMode]         = useState('client'); // 'client' or 'server'
+  const genMode = 'server'; // Exclusively use Cloud-Side (Server-Side) letter generation
 
   // ── SEO: authenticated main app ─────────────────────────────────────
   useSeo({
@@ -669,7 +669,7 @@ function MainApp() {
                     isGenerating={state === 'generating'}
                     format={format} onFormatChange={setFormat} onGenerate={handleGenerate}
                     validationPassed={true}
-                    genMode={genMode} onGenModeChange={setGenMode}
+                    genMode={genMode}
                   />
                 </>
               )}
