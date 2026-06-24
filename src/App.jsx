@@ -581,29 +581,20 @@ function MainApp() {
 
         <main className={styles.workspace}>
           <div className={styles.container}>
-            {activeTab === 'company_profile' && (
-              <div>
-                <CompanyProfileForm />
-              </div>
-            )}
-            {activeTab === 'company_signatory' && (
-              <div>
-                <SignatoryProfileForm />
-              </div>
-            )}
-            {activeTab === 'company_letterhead' && (
-              <div>
-                <LetterheadUpload active={true} />
-              </div>
-            )}
-            {activeTab === 'history' && (
-              <div>
-                <GenerationHistory active={true} />
-              </div>
-            )}
+            <div style={{ display: activeTab === 'company_profile' ? 'block' : 'none' }}>
+              <CompanyProfileForm />
+            </div>
+            <div style={{ display: activeTab === 'company_signatory' ? 'block' : 'none' }}>
+              <SignatoryProfileForm />
+            </div>
+            <div style={{ display: activeTab === 'company_letterhead' ? 'block' : 'none' }}>
+              <LetterheadUpload active={activeTab === 'company_letterhead'} />
+            </div>
+            <div style={{ display: activeTab === 'history' ? 'block' : 'none' }}>
+              <GenerationHistory active={activeTab === 'history'} />
+            </div>
 
-            {activeTab === 'generator' && (
-              <div>
+            <div style={{ display: activeTab === 'generator' ? 'block' : 'none' }}>
               <StepIndicator current={state} />
 
               {/* Upload or Create Blank Sheet option cards — shown when idle */}
@@ -769,7 +760,6 @@ function MainApp() {
 
               {state === 'idle' && <HelpCard />}
             </div>
-            )}
           </div>
         </main>
 

@@ -3,7 +3,7 @@ import { Building2, MapPin, CreditCard, Hash, Mail, Phone, Loader2, AlertCircle,
 import { profileApi } from '../utils/authApi';
 import styles from './ProfileForms.module.css';
 
-export default function CompanyProfileForm() {
+function CompanyProfileForm() {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -376,3 +376,4 @@ export default function CompanyProfileForm() {
     </div>
   );
 }
+export default React.memo(CompanyProfileForm);

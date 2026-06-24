@@ -3,7 +3,7 @@ import { Upload, FileText, AlertCircle, CheckCircle, Loader2, Play, Eye } from '
 import { profileApi, BASE_API, tokenStore } from '../utils/authApi';
 import styles from './ProfileForms.module.css';
 
-export default function LetterheadUpload({ active }) {
+function LetterheadUpload({ active }) {
   const fileInputRef = useRef(null);
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -505,3 +505,4 @@ export default function LetterheadUpload({ active }) {
     </div>
   );
 }
+export default React.memo(LetterheadUpload);

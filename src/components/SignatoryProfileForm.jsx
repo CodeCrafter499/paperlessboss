@@ -3,7 +3,7 @@ import { User, MapPin, CreditCard, Mail, Phone, Loader2, AlertCircle, CheckCircl
 import { profileApi } from '../utils/authApi';
 import styles from './ProfileForms.module.css';
 
-export default function SignatoryProfileForm() {
+function SignatoryProfileForm() {
   const [formData, setFormData] = useState({
     name: '',
     address: '',
@@ -274,3 +274,4 @@ export default function SignatoryProfileForm() {
     </div>
   );
 }
+export default React.memo(SignatoryProfileForm);

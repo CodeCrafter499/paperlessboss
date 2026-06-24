@@ -15,7 +15,7 @@ import { offerLetterApi } from '../utils/authApi';
 import { saveAs } from 'file-saver';
 import styles from './GenerationHistory.module.css';
 
-export default function GenerationHistory({ active }) {
+function GenerationHistory({ active }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [historyData, setHistoryData] = useState({ unique_employees_count: 0, logs: [] });
@@ -270,3 +270,4 @@ export default function GenerationHistory({ active }) {
     </div>
   );
 }
+export default React.memo(GenerationHistory);
