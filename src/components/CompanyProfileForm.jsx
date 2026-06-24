@@ -54,9 +54,6 @@ export default function CompanyProfileForm() {
       value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     } else if (name === 'mobile_no') {
       value = value.replace(/[^0-9]/g, '');
-    } else if (name === 'labour_identification_number') {
-      // Allow alphanumeric, spaces, and common separators like / - .
-      value = value.toUpperCase().replace(/[^A-Z0-9/\-\\.\s]/g, '');
     }
 
     setFormData((prev) => {
@@ -239,7 +236,7 @@ export default function CompanyProfileForm() {
                 placeholder="1234567890"
                 className={`${styles.input} ${errors.labour_identification_number ? styles.inputError : ''}`}
                 disabled={saving}
-                maxLength={10}
+                maxLength={50}
               />
             </div>
             {errors.labour_identification_number && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.labour_identification_number}</span>}
