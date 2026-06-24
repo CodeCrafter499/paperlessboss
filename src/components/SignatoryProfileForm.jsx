@@ -43,7 +43,9 @@ export default function SignatoryProfileForm() {
   const handleChange = useCallback((e) => {
     let { name, value } = e.target;
     
-    if (name === 'pan') {
+    if (name === 'name') {
+      value = value.replace(/[^A-Za-z\s.]/g, '');
+    } else if (name === 'pan') {
       value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     } else if (name === 'mobile_no') {
       value = value.replace(/[^0-9]/g, '');
@@ -55,7 +57,14 @@ export default function SignatoryProfileForm() {
 
   const validate = () => {
     const newErrors = {};
-    if (!formData.name.trim()) newErrors.name = 'Full Name is required.';
+    if (!formData.name.trim()) {
+      newErrors.name = 'Full Name is required.';
+    } else {
+      const nameRegex = /^[A-Za-z\s.]+$/;
+      if (!nameRegex.test(formData.name.trim())) {
+        newErrors.name = 'Full Name should only contain letters, spaces, and dots.';
+      }
+    }
     
     // PAN: 10 characters, pattern matching
     if (formData.pan) {
@@ -65,9 +74,17 @@ export default function SignatoryProfileForm() {
       }
     }
 
+    // Mobile Number: 10 digits
+    if (formData.mobile_no) {
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(formData.mobile_no)) {
+        newErrors.mobile_no = 'Contact Mobile Number must be exactly 10 digits.';
+      }
+    }
+
     // Email
     if (formData.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,8}$/;
       if (!emailRegex.test(formData.email)) {
         newErrors.email = 'Invalid email address format.';
       }
@@ -191,11 +208,12 @@ export default function SignatoryProfileForm() {
                 value={formData.mobile_no}
                 onChange={handleChange}
                 placeholder="9876543211"
-                className={styles.input}
+                className={`${styles.input} ${errors.mobile_no ? styles.inputError : ''}`}
                 disabled={saving}
                 maxLength={10}
               />
             </div>
+            {errors.mobile_no && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.mobile_no}</span>}
           </div>
 
           {/* Email */}

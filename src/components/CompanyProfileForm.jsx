@@ -50,10 +50,13 @@ export default function CompanyProfileForm() {
     let { name, value } = e.target;
     
     // Apply dynamic alphanumeric/numeric controls
-    if (name === 'gstin' || name === 'pan' || name === 'cin' || name === 'labour_identification_number') {
+    if (name === 'gstin' || name === 'pan' || name === 'cin') {
       value = value.toUpperCase().replace(/[^A-Z0-9]/g, '');
     } else if (name === 'mobile_no') {
       value = value.replace(/[^0-9]/g, '');
+    } else if (name === 'labour_identification_number') {
+      // Allow alphanumeric, spaces, and common separators like / - .
+      value = value.toUpperCase().replace(/[^A-Z0-9/\-\\.\s]/g, '');
     }
 
     setFormData((prev) => {
@@ -109,9 +112,24 @@ export default function CompanyProfileForm() {
       }
     }
 
+    // Labour Identification Number (LIN)
+    if (formData.labour_identification_number) {
+      if (formData.labour_identification_number.length > 50) {
+        newErrors.labour_identification_number = 'Labour Identification Number (LIN) cannot exceed 50 characters.';
+      }
+    }
+
+    // Mobile Number: 10 digits
+    if (formData.mobile_no) {
+      const mobileRegex = /^\d{10}$/;
+      if (!mobileRegex.test(formData.mobile_no)) {
+        newErrors.mobile_no = 'Corporate Contact Number must be exactly 10 digits.';
+      }
+    }
+
     // Email
     if (formData.email) {
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,8}$/;
       if (!emailRegex.test(formData.email)) {
         newErrors.email = 'Invalid email address format.';
       }
@@ -218,12 +236,13 @@ export default function CompanyProfileForm() {
                 name="labour_identification_number"
                 value={formData.labour_identification_number}
                 onChange={handleChange}
-                placeholder="LABOUR998877"
-                className={styles.input}
+                placeholder="1234567890"
+                className={`${styles.input} ${errors.labour_identification_number ? styles.inputError : ''}`}
                 disabled={saving}
-                maxLength={255}
+                maxLength={10}
               />
             </div>
+            {errors.labour_identification_number && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.labour_identification_number}</span>}
           </div>
 
           {/* GSTIN */}
@@ -294,11 +313,12 @@ export default function CompanyProfileForm() {
                 value={formData.mobile_no}
                 onChange={handleChange}
                 placeholder="9876543210"
-                className={styles.input}
+                className={`${styles.input} ${errors.mobile_no ? styles.inputError : ''}`}
                 disabled={saving}
                 maxLength={10}
               />
             </div>
+            {errors.mobile_no && <span className={styles.errorMsg}><AlertCircle size={12} /> {errors.mobile_no}</span>}
           </div>
 
           {/* Email */}

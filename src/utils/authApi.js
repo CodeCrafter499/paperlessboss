@@ -123,11 +123,20 @@ export const profileApi = {
       body: formData,
     }, false);
   },
+
+  listLetterheads: () =>
+    request('/api/v1/profile/company/letterheads', { method: 'GET' }, false),
+
+  activateLetterhead: (id) =>
+    request(`/api/v1/profile/company/letterheads/${id}/activate`, { method: 'PUT' }, false),
 };
 
 export const offerLetterApi = {
-  generateServer: () =>
-    request('/api/v1/offer-letters/generate', { method: 'POST' }, false),
+  generateServer: (letterheadId) =>
+    request('/api/v1/offer-letters/generate', {
+      method: 'POST',
+      body: letterheadId ? JSON.stringify({ letterhead_id: letterheadId }) : undefined
+    }, false),
 
   getStatus: () =>
     request('/api/v1/offer-letters/status', { method: 'GET' }, false),

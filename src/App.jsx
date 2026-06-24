@@ -3,7 +3,7 @@ import { useSeo } from './hooks/useSeo';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import * as XLSX from 'xlsx';
-import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Image, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History } from 'lucide-react';
+import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History, ChevronDown, ChevronRight } from 'lucide-react';
 
 import UploadZone from './components/UploadZone';
 import ValidationErrors from './components/ValidationErrors';
@@ -20,7 +20,7 @@ import { parseExcelFile, validateRows, COLUMN_MAP } from './utils/excelParser';
 import { generateDocxBlob, sanitizeFilename } from './utils/docxGenerator';
 import { generatePdfBlob } from './utils/pdfGenerator';
 import { useAuth } from './context/AuthContext';
-import { validateExcelApi, authApi, offerLetterApi } from './utils/authApi';
+import { validateExcelApi, authApi, profileApi, offerLetterApi } from './utils/authApi';
 
 import styles from './App.module.css';
 
@@ -75,9 +75,30 @@ function MainApp() {
   const [isZipping, setIsZipping]     = useState(false);
   const [format, setFormat]           = useState('both');
   const [validationResult, setValidationResult] = useState(null);
+  const [letterheads, setLetterheads] = useState([]);
+  const [selectedLetterheadId, setSelectedLetterheadId] = useState('');
   
   // Settings / Integration States
-  const [activeTab, setActiveTab]     = useState('generator'); // 'generator', 'company', 'signatory', 'letterhead'
+  const [activeTab, setActiveTab]     = useState('generator'); // 'generator', 'company_profile', 'company_signatory', 'company_letterhead', 'history'
+  const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+
+  useEffect(() => {
+    if (user && activeTab === 'generator') {
+      profileApi.listLetterheads()
+        .then(list => {
+          setLetterheads(list || []);
+          if (list && list.length > 0) {
+            const active = list.find(v => v.is_active);
+            if (active) {
+              setSelectedLetterheadId(active.id);
+            } else {
+              setSelectedLetterheadId(list[0].id);
+            }
+          }
+        })
+        .catch(err => console.error('Failed to list letterheads:', err));
+    }
+  }, [user, activeTab]);
   const genMode = 'server'; // Exclusively use Cloud-Side (Server-Side) letter generation
 
   // ── SEO: authenticated main app ─────────────────────────────────────
@@ -229,7 +250,7 @@ function MainApp() {
 
     if (genMode === 'server') {
       try {
-        await offerLetterApi.generateServer();
+        await offerLetterApi.generateServer(selectedLetterheadId);
         
         // Setup polling interval
         const pollInterval = setInterval(async () => {
@@ -344,7 +365,7 @@ function MainApp() {
 
     setGeneratedFiles(filesWithLogIds);
     setState('done');
-  }, [rows, format, genMode]);
+  }, [rows, format, genMode, selectedLetterheadId]);
 
   const handleDownloadOne = useCallback(async (index, type) => {
     const f = generatedFiles[index];
@@ -417,9 +438,9 @@ function MainApp() {
   // Get active tab title for the main header bar
   const tabTitles = {
     generator: 'Generate Offer Letters',
-    company: 'Company Profile Settings',
-    signatory: 'Authorised Signatory Details',
-    letterhead: 'Company Letterhead Template',
+    company_profile: 'Company Profile Settings',
+    company_signatory: 'Authorised Signatory Details',
+    company_letterhead: 'Company Letterhead Template',
     history: 'Generation History Log',
   };
 
@@ -468,28 +489,51 @@ function MainApp() {
           </button>
           <button 
             type="button"
-            className={`${styles.navItem} ${activeTab === 'company' ? styles.navItemActive : ''}`}
-            onClick={() => setActiveTab('company')}
+            className={`${styles.navItem} ${['company_profile', 'company_signatory', 'company_letterhead'].includes(activeTab) ? styles.navItemActive : ''}`}
+            onClick={() => {
+              setIsCompanyDropdownOpen(prev => {
+                const next = !prev;
+                if (next && !['company_profile', 'company_signatory', 'company_letterhead'].includes(activeTab)) {
+                  setActiveTab('company_profile');
+                }
+                return next;
+              });
+            }}
           >
             <Building2 size={16} />
-            <span>Company Profile</span>
+            <span>Company Setup</span>
+            {isCompanyDropdownOpen ? (
+              <ChevronDown size={14} style={{ marginLeft: 'auto' }} />
+            ) : (
+              <ChevronRight size={14} style={{ marginLeft: 'auto' }} />
+            )}
           </button>
-          <button 
-            type="button"
-            className={`${styles.navItem} ${activeTab === 'signatory' ? styles.navItemActive : ''}`}
-            onClick={() => setActiveTab('signatory')}
-          >
-            <User size={16} />
-            <span>Authorised Signatory</span>
-          </button>
-          <button 
-            type="button"
-            className={`${styles.navItem} ${activeTab === 'letterhead' ? styles.navItemActive : ''}`}
-            onClick={() => setActiveTab('letterhead')}
-          >
-            <Image size={16} />
-            <span>Letterhead PDF</span>
-          </button>
+          
+          {isCompanyDropdownOpen && (
+            <div className={styles.submenu}>
+              <button
+                type="button"
+                className={`${styles.submenuItem} ${activeTab === 'company_profile' ? styles.submenuItemActive : ''}`}
+                onClick={() => setActiveTab('company_profile')}
+              >
+                <span>Company Profile</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.submenuItem} ${activeTab === 'company_signatory' ? styles.submenuItemActive : ''}`}
+                onClick={() => setActiveTab('company_signatory')}
+              >
+                <span>Authorised Signatory</span>
+              </button>
+              <button
+                type="button"
+                className={`${styles.submenuItem} ${activeTab === 'company_letterhead' ? styles.submenuItemActive : ''}`}
+                onClick={() => setActiveTab('company_letterhead')}
+              >
+                <span>Letterhead PDF</span>
+              </button>
+            </div>
+          )}
           <button 
             type="button"
             className={`${styles.navItem} ${activeTab === 'history' ? styles.navItemActive : ''}`}
@@ -537,14 +581,14 @@ function MainApp() {
 
         <main className={styles.workspace}>
           <div className={styles.container}>
-            <div style={{ display: activeTab === 'company' ? 'block' : 'none' }}>
+            <div style={{ display: activeTab === 'company_profile' ? 'block' : 'none' }}>
               <CompanyProfileForm />
             </div>
-            <div style={{ display: activeTab === 'signatory' ? 'block' : 'none' }}>
+            <div style={{ display: activeTab === 'company_signatory' ? 'block' : 'none' }}>
               <SignatoryProfileForm />
             </div>
-            <div style={{ display: activeTab === 'letterhead' ? 'block' : 'none' }}>
-              <LetterheadUpload active={activeTab === 'letterhead'} />
+            <div style={{ display: activeTab === 'company_letterhead' ? 'block' : 'none' }}>
+              <LetterheadUpload active={activeTab === 'company_letterhead'} />
             </div>
             <div style={{ display: activeTab === 'history' ? 'block' : 'none' }}>
               <GenerationHistory active={activeTab === 'history'} />
@@ -664,6 +708,26 @@ function MainApp() {
                     onRevalidate={handleRevalidate} 
                     isGenerating={state === 'generating'} 
                   />
+                  {letterheads.length > 0 && (
+                    <div className={styles.letterheadSelectorCard}>
+                      <div className={styles.letterheadSelectorTitle}>
+                        <span>Select Letterhead Template for Generation</span>
+                      </div>
+                      <select
+                        className={styles.letterheadSelect}
+                        value={selectedLetterheadId}
+                        onChange={(e) => setSelectedLetterheadId(e.target.value)}
+                        disabled={state === 'generating'}
+                      >
+                        {letterheads.map(lh => (
+                          <option key={lh.id} value={lh.id}>
+                            {lh.filename} {lh.is_active ? '(Active)' : ''}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
                   <GeneratePanel
                     total={rows.length} progress={genProgress}
                     isGenerating={state === 'generating'}
