@@ -2,10 +2,17 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { FileSpreadsheet, CheckCircle2, Zap, ShieldCheck, Printer, Check, Star, Users } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useSeo } from '../hooks/useSeo';
 import styles from './Home.module.css';
 
 export default function Home() {
   const { user } = useAuth();
+
+  useSeo({
+    title: 'Generate Appointment Letters Instantly',
+    description: 'Transform employee onboarding. Upload an Excel list, validate compliance formats dynamically, and export legal-ready PDFs and DOCX files automatically.',
+    keywords: ['appointment letter generator', 'onboard employees', 'HR automation', 'validate Excel list'],
+  });
 
   return (
     <div className={styles.container}>

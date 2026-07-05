@@ -7,7 +7,11 @@ echo "🚀 Starting frontend deployment..."
 echo "📥 Pulling latest updates from GitHub..."
 git pull origin dev
 
-# 2. Build the React app
+# 2. Install any new dependencies
+echo "📦 Installing package dependencies..."
+npm install
+
+# 3. Build the React app
 echo "🏗️ Compiling the React production build..."
 npm run build
 

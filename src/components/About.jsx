@@ -1,7 +1,14 @@
 import React from 'react';
+import { useSeo } from '../hooks/useSeo';
 import styles from './About.module.css';
 
 export default function About() {
+  useSeo({
+    title: 'Our Mission & Vision',
+    description: 'Learn about PaperlessBoss by CodeCrafters Inc. Our mission is to automate legal, regulatory, and formatting validations for corporate documentation.',
+    keywords: ['about PaperlessBoss', 'CodeCrafters Inc', 'HR software solutions', 'automated compliance'],
+  });
+
   return (
     <div className={styles.container}>
       {/* Hero Section */}
