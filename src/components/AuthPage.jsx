@@ -21,13 +21,13 @@ export default function AuthPage({ initialScreen = 'login' }) {
 
   // ── Dynamic SEO per auth screen ───────────────────────────────────────
   const seoMap = {
-    login:          { title: 'Sign In',             description: 'Sign in to PaperlessBoss to generate appointment letters from Excel. Secure OTP-based authentication by CodeCrafters Inc.' },
-    register:       { title: 'Create Account',      description: 'Create your free PaperlessBoss account to start generating compliant appointment letters instantly from Excel data.' },
-    otp:            { title: 'Verify Email',         description: 'Verify your email address to activate your PaperlessBoss account.', noIndex: true },
-    'reg-success':  { title: 'Registration Success', description: 'Your PaperlessBoss account is ready.', noIndex: true },
-    forgot:         { title: 'Forgot Password',      description: 'Reset your PaperlessBoss password securely.', noIndex: true },
-    'forgot-otp':   { title: 'Reset Password OTP',   description: 'Enter OTP to reset your PaperlessBoss password.', noIndex: true },
-    'reset-success':{ title: 'Password Reset',       description: 'Your password has been reset successfully.', noIndex: true },
+    login: { title: 'Sign In', description: 'Sign in to PaperlessBoss to generate appointment letters from Excel. Secure OTP-based authentication by CodeCrafters Inc.' },
+    register: { title: 'Create Account', description: 'Create your free PaperlessBoss account to start generating compliant appointment letters instantly from Excel data.' },
+    otp: { title: 'Verify Email', description: 'Verify your email address to activate your PaperlessBoss account.', noIndex: true },
+    'reg-success': { title: 'Registration Success', description: 'Your PaperlessBoss account is ready.', noIndex: true },
+    forgot: { title: 'Forgot Password', description: 'Reset your PaperlessBoss password securely.', noIndex: true },
+    'forgot-otp': { title: 'Reset Password OTP', description: 'Enter OTP to reset your PaperlessBoss password.', noIndex: true },
+    'reset-success': { title: 'Password Reset', description: 'Your password has been reset successfully.', noIndex: true },
   };
   useSeo(seoMap[screen] || seoMap['login']);
 
@@ -47,13 +47,13 @@ export default function AuthPage({ initialScreen = 'login' }) {
           </div>
         </div>
 
-        {screen === 'login'        && <LoginScreen onLogin={login} onRegister={() => setScreen('register')} onForgot={() => setScreen('forgot')} />}
-        {screen === 'register'     && <RegisterScreen onBack={goLogin} onRegistered={(e) => { setPendingEmail(e); setScreen('otp'); }} />}
-        {screen === 'otp'          && <OtpScreen email={pendingEmail} onVerified={() => setScreen('reg-success')} onBack={() => setScreen('register')} />}
-        {screen === 'reg-success'  && <RegSuccess onLogin={goLogin} />}
-        {screen === 'forgot'       && <ForgotScreen onBack={goLogin} onOtpSent={(e) => { setPendingEmail(e); setScreen('forgot-otp'); }} />}
-        {screen === 'forgot-otp'   && <ForgotOtpScreen email={pendingEmail} onSuccess={() => setScreen('reset-success')} onBack={() => setScreen('forgot')} />}
-        {screen === 'reset-success'&& <ResetSuccess onLogin={goLogin} />}
+        {screen === 'login' && <LoginScreen onLogin={login} onRegister={() => setScreen('register')} onForgot={() => setScreen('forgot')} />}
+        {screen === 'register' && <RegisterScreen onBack={goLogin} onRegistered={(e) => { setPendingEmail(e); setScreen('otp'); }} />}
+        {screen === 'otp' && <OtpScreen email={pendingEmail} onVerified={() => setScreen('reg-success')} onBack={() => setScreen('register')} />}
+        {screen === 'reg-success' && <RegSuccess onLogin={goLogin} />}
+        {screen === 'forgot' && <ForgotScreen onBack={goLogin} onOtpSent={(e) => { setPendingEmail(e); setScreen('forgot-otp'); }} />}
+        {screen === 'forgot-otp' && <ForgotOtpScreen email={pendingEmail} onSuccess={() => setScreen('reset-success')} onBack={() => setScreen('forgot')} />}
+        {screen === 'reset-success' && <ResetSuccess onLogin={goLogin} />}
       </div>
     </div>
   );
@@ -61,11 +61,11 @@ export default function AuthPage({ initialScreen = 'login' }) {
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 function LoginScreen({ onLogin, onRegister, onForgot }) {
-  const [email, setEmail]     = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPw, setShowPw]   = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -111,19 +111,19 @@ function LoginScreen({ onLogin, onRegister, onForgot }) {
 
 // ─── Register ─────────────────────────────────────────────────────────────────
 function RegisterScreen({ onBack, onRegistered }) {
-  const [email, setEmail]     = useState('');
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
-  const [showPw, setShowPw]   = useState(false);
+  const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setError('');
     if (!email || !password || !confirm) { setError('Please fill in all fields.'); return; }
-    if (password !== confirm)            { setError('Passwords do not match.'); return; }
-    if (password.length < 8)            { setError('Password must be at least 8 characters.'); return; }
+    if (password !== confirm) { setError('Passwords do not match.'); return; }
+    if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
     try { await authApi.register(email, password); onRegistered(email); }
     catch (err) { setError(err.message); }
@@ -168,11 +168,11 @@ function RegisterScreen({ onBack, onRegistered }) {
 
 // ─── OTP Verify (registration) ────────────────────────────────────────────────
 function OtpScreen({ email, onVerified, onBack }) {
-  const [otp, setOtp]           = useState('');
-  const [loading, setLoading]   = useState(false);
+  const [otp, setOtp] = useState('');
+  const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
-  const [error, setError]       = useState('');
-  const [resent, setResent]     = useState(false);
+  const [error, setError] = useState('');
+  const [resent, setResent] = useState(false);
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -243,9 +243,9 @@ function RegSuccess({ onLogin }) {
 
 // ─── Forgot Password ───────────────────────────────────────────────────────────
 function ForgotScreen({ onBack, onOtpSent }) {
-  const [email, setEmail]     = useState('');
+  const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
@@ -282,9 +282,9 @@ function ForgotScreen({ onBack, onOtpSent }) {
 
 // ─── Forgot OTP ───────────────────────────────────────────────────────────────
 function ForgotOtpScreen({ email, onSuccess, onBack }) {
-  const [otp, setOtp]         = useState('');
+  const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
-  const [error, setError]     = useState('');
+  const [error, setError] = useState('');
 
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
