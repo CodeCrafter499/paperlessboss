@@ -1800,3 +1800,74 @@
 .resourceLink:hover {
   text-decoration: underline;
 }
+
+/* ── Theme Adaptations for Home Page Sections in Dark Mode ── */
+:root[data-theme='dark'] .homeContainer {
+  background-color: var(--color-bg-page) !important;
+  color: var(--color-gray-900) !important;
+}
+
+:root[data-theme='dark'] .painPointsSection,
+:root[data-theme='dark'] .painPointsWrapper,
+:root[data-theme='dark'] .capabilitiesSection,
+:root[data-theme='dark'] .howItWorksSection,
+:root[data-theme='dark'] .contractorSection,
+:root[data-theme='dark'] .faqSection,
+:root[data-theme='dark'] .footerSection,
+:root[data-theme='dark'] .trustSection,
+:root[data-theme='dark'] .resourcesSection,
+:root[data-theme='dark'] .interactiveShowcaseSection {
+  background: var(--color-bg-page) !important;
+  background-color: var(--color-bg-page) !important;
+  color: var(--color-gray-900) !important;
+  border-color: var(--color-gray-200) !important;
+}
+
+:root[data-theme='dark'] .painPointCard,
+:root[data-theme='dark'] .capabilityCard,
+:root[data-theme='dark'] .mockWindow,
+:root[data-theme='dark'] .contractorCard,
+:root[data-theme='dark'] .faqItem,
+:root[data-theme='dark'] .stepCircle,
+:root[data-theme='dark'] .resourceCard,
+:root[data-theme='dark'] .faqQuestionContainer,
+:root[data-theme='dark'] .accordionHeader,
+:root[data-theme='dark'] .modalContent,
+:root[data-theme='dark'] .modalListItem,
+:root[data-theme='dark'] .trustCard,
+:root[data-theme='dark'] .showcaseNavBtn {
+  background: var(--color-bg-surface) !important;
+  background-color: var(--color-bg-surface) !important;
+  border-color: var(--color-gray-200) !important;
+  color: var(--color-gray-900) !important;
+}
+
+:root[data-theme='dark'] .sectionTitle,
+:root[data-theme='dark'] .painPointTitle,
+:root[data-theme='dark'] .capabilityTitle,
+:root[data-theme='dark'] .stepTitle,
+:root[data-theme='dark'] .faqQuestionText,
+:root[data-theme='dark'] .modalHeaderTitle,
+:root[data-theme='dark'] .contractorSectionTitle,
+:root[data-theme='dark'] .footerTitle {
+  color: var(--color-gray-900) !important;
+}
+
+:root[data-theme='dark'] .painPointText,
+:root[data-theme='dark'] .capabilityText,
+:root[data-theme='dark'] .stepText,
+:root[data-theme='dark'] .faqAnswerText,
+:root[data-theme='dark'] .modalSubtitle,
+:root[data-theme='dark'] .modalItemText,
+:root[data-theme='dark'] .footerLink,
+:root[data-theme='dark'] .footerText,
+:root[data-theme='dark'] .heroSubtitle,
+:root[data-theme='dark'] .checkmarkItem {
+  color: var(--color-gray-500) !important;
+}
+
+:root[data-theme='dark'] .heroSecondaryBtn {
+  background: var(--color-bg-surface) !important;
+  color: var(--color-gray-900) !important;
+  border-color: var(--color-gray-300) !important;
+}
