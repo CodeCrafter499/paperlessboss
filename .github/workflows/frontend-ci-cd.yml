@@ -18,27 +18,45 @@ jobs:
         cache: 'npm'
 
     - name: Install Dependencies & Build
+      env:
+        CI: false
       run: |
         npm ci
         npm run build
+
+    # Share built files with the deploy job
+    - name: Upload Build Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: react-build
+        path: build/
 
   deploy:
     needs: build
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
-    - name: Deploy Build to AWS Nginx Web Directory
+    - name: Download Build Artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: react-build
+        path: build
+
+    - name: Copy Build Files to AWS Nginx Web Root
+      uses: appleboy/scp-action@v0.1.7
+      with:
+        host: '13.62.50.7'
+        username: 'ubuntu'
+        key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        source: "build/*"
+        target: "/var/www/html"
+        strip_components: 1
+
+    - name: Restart Nginx on AWS via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: '13.62.50.7'
         username: 'ubuntu'
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         script: |
-          cd /path/to/your/deployed/frontend-folder
-          git checkout main
-          git pull origin main
-          npm ci
-          npm run build
-          # Copy build output to system Nginx web root directory
-          sudo cp -r build/* /var/www/html/
           sudo systemctl restart nginx
