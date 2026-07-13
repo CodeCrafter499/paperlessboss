@@ -122,8 +122,16 @@ export default function Home() {
       <section className={styles.heroSection}>
         <div className={styles.heroContent}>
           <div className={styles.indianBadge}>
-            <span className={styles.badgeFlag}>🇮🇳</span>
-            <span>Made in India • For Indian businesses</span>
+            <svg width="18" height="12" viewBox="0 0 900 600" style={{ marginRight: '6px', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle' }}>
+              <rect width="900" height="200" fill="#FF9933"/>
+              <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+              <rect y="400" width="900" height="200" fill="#128807"/>
+              <circle cx="450" cy="300" r="92" fill="none" stroke="#000080" strokeWidth="8"/>
+              <circle cx="450" cy="300" r="16" fill="#000080"/>
+              <path d="M450,208 L450,392 M358,300 L542,300 M385,235 L515,365 M385,365 L515,235" stroke="#000080" strokeWidth="4"/>
+              <path d="M415,215 L485,385 M485,215 L415,385 M358,265 L542,335 M358,335 L542,265" stroke="#000080" strokeWidth="4"/>
+            </svg>
+            <span style={{ verticalAlign: 'middle' }}>Make in India • For Indian businesses</span>
           </div>
           <h1 className={styles.heroTitle}>
             Labour Compliance <br />
@@ -270,9 +278,17 @@ export default function Home() {
             </div>
           </div>
           <div className={styles.tickerItem}>
-            <span className={styles.tickerFlag}>🇮🇳</span>
+            <svg width="24" height="16" viewBox="0 0 900 600" style={{ borderRadius: '2px', flexShrink: 0, marginRight: '10px' }}>
+              <rect width="900" height="200" fill="#FF9933"/>
+              <rect y="200" width="900" height="200" fill="#FFFFFF"/>
+              <rect y="400" width="900" height="200" fill="#128807"/>
+              <circle cx="450" cy="300" r="92" fill="none" stroke="#000080" strokeWidth="8"/>
+              <circle cx="450" cy="300" r="16" fill="#000080"/>
+              <path d="M450,208 L450,392 M358,300 L542,300 M385,235 L515,365 M385,365 L515,235" stroke="#000080" strokeWidth="4"/>
+              <path d="M415,215 L485,385 M485,215 L415,385 M358,265 L542,335 M358,335 L542,265" stroke="#000080" strokeWidth="4"/>
+            </svg>
             <div>
-              <div className={styles.tickerTitle}>Made in India</div>
+              <div className={styles.tickerTitle}>Make in India</div>
               <div className={styles.tickerDesc}>For Indian businesses</div>
             </div>
           </div>

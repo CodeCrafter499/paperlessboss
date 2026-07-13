@@ -1765,6 +1765,410 @@
   border-radius: 6px;
   padding: 8px 14px;
   font-size: 12px;
+align-items: flex-start;
+}
+
+.contactIconCircle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #f0f7ff;
+  color: #0056b3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.contactDetailItem strong {
+  font-size: 14px;
+  color: #0f172a;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.contactDetailItem p, .contactDetailItem a {
+  font-size: 13px;
+  color: #475569;
+  text-decoration: none;
+}
+
+.contactFormSide {
+  flex: 1.2;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 40px;
+}
+
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formRow {
+  display: flex;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  text-align: left;
+}
+
+.formGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.formGroup input, .formGroup textarea {
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  transition: all 0.15s ease;
+}
+
+.formGroup input:focus, .formGroup textarea:focus {
+  outline: none;
+  border-color: #0056b3;
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+}
+
+.contactSubmitBtn {
+  background: #0056b3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.contactSubmitBtn:hover {
+  background: #004494;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.25);
+}
+
+/* ── 13. RESOURCES MODAL STYLES ── */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 640px;
+  width: 100%;
+  padding: 40px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modalCloseBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modalHeaderTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.modalSubtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.modalItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalListItem {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: #f8fafc;
+}
+
+.modalListItem strong {
+  font-size: 14px;
+  color: #0f172a;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.modalItemText {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modalItemActionBtn {
+  background: #0056b3;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+}
+
+.modalItemActionBtn:hover {
+  background: #004494;
+}
+
+.modalUpdateBadge {
+  font-size: 10px;
+}
+
+.resourceLink {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #0056b3;
+  text-align: left;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  margin-top: auto;
+}
+
+.contactDetailItem strong {
+  font-size: 14px;
+  color: #0f172a;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.contactDetailItem p, .contactDetailItem a {
+  font-size: 13px;
+  color: #475569;
+  text-decoration: none;
+}
+
+.contactFormSide {
+  flex: 1.2;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 40px;
+}
+
+.contactForm {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.formRow {
+  display: flex;
+  gap: 20px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  text-align: left;
+}
+
+.formGroup label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.formGroup input, .formGroup textarea {
+  padding: 12px 16px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #fff;
+  transition: all 0.15s ease;
+}
+
+.formGroup input:focus, .formGroup textarea:focus {
+  outline: none;
+  border-color: #0056b3;
+  box-shadow: 0 0 0 3px rgba(0, 86, 179, 0.1);
+}
+
+.contactSubmitBtn {
+  background: #0056b3;
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 14px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.contactSubmitBtn:hover {
+  background: #004494;
+  box-shadow: 0 4px 12px rgba(0, 86, 179, 0.25);
+}
+
+/* ── 13. RESOURCES MODAL STYLES ── */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+  padding: 20px;
+}
+
+.modalContent {
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  max-width: 640px;
+  width: 100%;
+  padding: 40px;
+  position: relative;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: left;
+}
+
+.modalCloseBtn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  border: none;
+  background: #f1f5f9;
+  color: #64748b;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.modalCloseBtn:hover {
+  background: #e2e8f0;
+  color: #0f172a;
+}
+
+.modalHeaderTitle {
+  font-size: 24px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 8px;
+}
+
+.modalSubtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.modalItemsList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalListItem {
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  background: #f8fafc;
+}
+
+.modalListItem strong {
+  font-size: 14px;
+  color: #0f172a;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.modalItemText {
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.modalItemActionBtn {
+  background: #0056b3;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 12px;
   font-weight: 700;
   text-decoration: none;
   cursor: pointer;
@@ -1804,70 +2208,246 @@
 /* ── Theme Adaptations for Home Page Sections in Dark Mode ── */
 :root[data-theme='dark'] .homeContainer {
   background-color: var(--color-bg-page) !important;
-  color: var(--color-gray-900) !important;
+  color: #ffffff !important;
 }
 
-:root[data-theme='dark'] .painPointsSection,
-:root[data-theme='dark'] .painPointsWrapper,
-:root[data-theme='dark'] .capabilitiesSection,
-:root[data-theme='dark'] .howItWorksSection,
-:root[data-theme='dark'] .contractorSection,
-:root[data-theme='dark'] .faqSection,
-:root[data-theme='dark'] .footerSection,
-:root[data-theme='dark'] .trustSection,
-:root[data-theme='dark'] .resourcesSection,
-:root[data-theme='dark'] .interactiveShowcaseSection {
+:root[data-theme='dark'] .homeContainer .painPointsSection,
+:root[data-theme='dark'] .homeContainer .painPointsWrapper,
+:root[data-theme='dark'] .homeContainer .capabilitiesSection,
+:root[data-theme='dark'] .homeContainer .howItWorksSection,
+:root[data-theme='dark'] .homeContainer .contractorSection,
+:root[data-theme='dark'] .homeContainer .faqSection,
+:root[data-theme='dark'] .homeContainer .footerSection,
+:root[data-theme='dark'] .homeContainer .trustSection,
+:root[data-theme='dark'] .homeContainer .resourcesSection,
+:root[data-theme='dark'] .homeContainer .interactiveShowcaseSection,
+:root[data-theme='dark'] .homeContainer .tickerSection,
+:root[data-theme='dark'] .homeContainer .whyChooseSection,
+:root[data-theme='dark'] .homeContainer .showcaseSection,
+:root[data-theme='dark'] .homeContainer .pricingSection,
+:root[data-theme='dark'] .homeContainer .contactSection {
   background: var(--color-bg-page) !important;
   background-color: var(--color-bg-page) !important;
-  color: var(--color-gray-900) !important;
-  border-color: var(--color-gray-200) !important;
+  color: #ffffff !important;
+  border-color: var(--color-gray-100) !important;
 }
 
-:root[data-theme='dark'] .painPointCard,
-:root[data-theme='dark'] .capabilityCard,
-:root[data-theme='dark'] .mockWindow,
-:root[data-theme='dark'] .contractorCard,
-:root[data-theme='dark'] .faqItem,
-:root[data-theme='dark'] .stepCircle,
-:root[data-theme='dark'] .resourceCard,
-:root[data-theme='dark'] .faqQuestionContainer,
-:root[data-theme='dark'] .accordionHeader,
-:root[data-theme='dark'] .modalContent,
-:root[data-theme='dark'] .modalListItem,
-:root[data-theme='dark'] .trustCard,
-:root[data-theme='dark'] .showcaseNavBtn {
+:root[data-theme='dark'] .homeContainer .painPointCard,
+:root[data-theme='dark'] .homeContainer .capabilityCard,
+:root[data-theme='dark'] .homeContainer .mockWindow,
+:root[data-theme='dark'] .homeContainer .contractorCard,
+:root[data-theme='dark'] .homeContainer .faqItem,
+:root[data-theme='dark'] .homeContainer .stepCircle,
+:root[data-theme='dark'] .homeContainer .resourceCard,
+:root[data-theme='dark'] .homeContainer .faqQuestionContainer,
+:root[data-theme='dark'] .homeContainer .accordionHeader,
+:root[data-theme='dark'] .homeContainer .modalContent,
+:root[data-theme='dark'] .homeContainer .modalListItem,
+:root[data-theme='dark'] .homeContainer .trustCard,
+:root[data-theme='dark'] .homeContainer .showcaseNavBtn,
+:root[data-theme='dark'] .homeContainer .comparisonTableBox,
+:root[data-theme='dark'] .homeContainer .whyChooseCard,
+:root[data-theme='dark'] .homeContainer .showcaseDisplayBox,
+:root[data-theme='dark'] .homeContainer .displayCard,
+:root[data-theme='dark'] .homeContainer .mockStatCard,
+:root[data-theme='dark'] .homeContainer .showcaseTabs,
+:root[data-theme='dark'] .homeContainer .priceCard,
+:root[data-theme='dark'] .homeContainer .faqQuestion,
+:root[data-theme='dark'] .homeContainer .faqAnswer,
+:root[data-theme='dark'] .homeContainer .faqContainer,
+:root[data-theme='dark'] .homeContainer .contactFormSide,
+:root[data-theme='dark'] .homeContainer .contactForm,
+:root[data-theme='dark'] .homeContainer .contactIconCircle,
+:root[data-theme='dark'] .homeContainer .ctaBannerCard,
+:root[data-theme='dark'] .homeContainer .listMock,
+:root[data-theme='dark'] .homeContainer .payslipMock,
+:root[data-theme='dark'] .homeContainer .reportsMock,
+:root[data-theme='dark'] .homeContainer .letterPreviewMock,
+:root[data-theme='dark'] .homeContainer .mockSidebar {
   background: var(--color-bg-surface) !important;
   background-color: var(--color-bg-surface) !important;
-  border-color: var(--color-gray-200) !important;
-  color: var(--color-gray-900) !important;
+  border-color: var(--color-gray-100) !important;
+  color: #ffffff !important;
 }
 
-:root[data-theme='dark'] .sectionTitle,
-:root[data-theme='dark'] .painPointTitle,
-:root[data-theme='dark'] .capabilityTitle,
-:root[data-theme='dark'] .stepTitle,
-:root[data-theme='dark'] .faqQuestionText,
-:root[data-theme='dark'] .modalHeaderTitle,
-:root[data-theme='dark'] .contractorSectionTitle,
-:root[data-theme='dark'] .footerTitle {
-  color: var(--color-gray-900) !important;
+:root[data-theme='dark'] .homeContainer .mockHeader,
+:root[data-theme='dark'] .homeContainer .listSearchRow,
+:root[data-theme='dark'] .homeContainer .showcaseMockWrapper {
+  background: var(--color-gray-50) !important;
+  border-color: var(--color-gray-100) !important;
 }
 
-:root[data-theme='dark'] .painPointText,
-:root[data-theme='dark'] .capabilityText,
-:root[data-theme='dark'] .stepText,
-:root[data-theme='dark'] .faqAnswerText,
-:root[data-theme='dark'] .modalSubtitle,
-:root[data-theme='dark'] .modalItemText,
-:root[data-theme='dark'] .footerLink,
-:root[data-theme='dark'] .footerText,
-:root[data-theme='dark'] .heroSubtitle,
-:root[data-theme='dark'] .checkmarkItem {
-  color: var(--color-gray-500) !important;
+:root[data-theme='dark'] .homeContainer .priceCard.popularCard {
+  background: var(--color-primary-pale) !important;
+  border-color: var(--color-primary) !important;
 }
 
-:root[data-theme='dark'] .heroSecondaryBtn {
+:root[data-theme='dark'] .homeContainer .showcaseTabs {
+  background: var(--color-gray-50) !important;
+  border: 1px solid var(--color-gray-100) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .showcaseTabBtn {
+  background: transparent !important;
+  color: #94a3b8 !important;
+}
+
+:root[data-theme='dark'] .homeContainer .showcaseTabBtn.activeTab {
   background: var(--color-bg-surface) !important;
-  color: var(--color-gray-900) !important;
+  color: var(--color-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .comparisonTable th {
+  background: var(--color-bg-page) !important;
+  color: #ffffff !important;
+  border-color: var(--color-gray-100) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .comparisonTable td {
+  background: var(--color-bg-surface) !important;
+  color: #cbd5e1 !important;
+  border-color: var(--color-gray-100) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .comparisonTable td.highlightCol {
+  background: var(--color-success-bg) !important;
+  color: var(--color-success) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .faqQuestion {
+  background-color: var(--color-gray-50) !important;
+  border-bottom: 1px solid var(--color-gray-100) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .faqQuestion span,
+:root[data-theme='dark'] .homeContainer .faqAnswer p {
+  color: #ffffff !important;
+}
+
+/* Contact Detail Items Legibility */
+:root[data-theme='dark'] .homeContainer .contactDetailItem strong {
+  color: #ffffff !important;
+}
+
+:root[data-theme='dark'] .homeContainer .contactDetailItem p,
+:root[data-theme='dark'] .homeContainer .contactDetailItem a {
+  color: #cbd5e1 !important;
+}
+
+/* Form Inputs & Fields Styling */
+:root[data-theme='dark'] .homeContainer .contactForm input,
+:root[data-theme='dark'] .homeContainer .contactForm textarea,
+:root[data-theme='dark'] .homeContainer .contactForm select,
+:root[data-theme='dark'] .homeContainer .mockSearchInput {
+  background-color: var(--color-gray-50) !important;
+  border-color: var(--color-gray-100) !important;
+  color: #ffffff !important;
+}
+
+:root[data-theme='dark'] .homeContainer .contactForm input::placeholder,
+:root[data-theme='dark'] .homeContainer .contactForm textarea::placeholder,
+:root[data-theme='dark'] .homeContainer .mockSearchInput::placeholder {
+  color: #584a86 !important; /* Soft Amethyst Grey placeholder */
+}
+
+:root[data-theme='dark'] .homeContainer .contactForm label {
+  color: #ffffff !important;
+}
+
+/* Mock Dashboard Inner Styles */
+:root[data-theme='dark'] .homeContainer .mockSidebarItem {
+  color: #cbd5e1 !important;
+}
+
+:root[data-theme='dark'] .homeContainer .mockSidebarItem.active {
+  background: var(--color-gray-100) !important;
+  color: var(--color-primary) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .mockTable th,
+:root[data-theme='dark'] .homeContainer .listMock th {
+  background: var(--color-gray-50) !important;
+  color: #ffffff !important;
+  border-color: var(--color-gray-100) !important;
+}
+
+:root[data-theme='dark'] .homeContainer .mockTable td,
+:root[data-theme='dark'] .homeContainer .listMock td {
+  background: transparent !important;
+  color: #cbd5e1 !important;
+  border-color: var(--color-gray-50) !important;
+}
+
+/* Mock Letter Preview Inner Text Contrast */
+:root[data-theme='dark'] .homeContainer .letterMockBody h5 {
+  color: #ffffff !important;
+}
+
+:root[data-theme='dark'] .homeContainer .letterMockBody,
+:root[data-theme='dark'] .homeContainer .letterMockBody p,
+:root[data-theme='dark'] .homeContainer .letterMockBody div,
+:root[data-theme='dark'] .homeContainer .letterMockBody strong,
+:root[data-theme='dark'] .homeContainer .letterMockBody span {
+  color: #cbd5e1 !important;
+}
+
+/* Bright White / Ice-blue Title & Heading overrides */
+:root[data-theme='dark'] .homeContainer .sectionTitle,
+:root[data-theme='dark'] .homeContainer .painPointTitle,
+:root[data-theme='dark'] .homeContainer .capabilityTitle,
+:root[data-theme='dark'] .homeContainer .stepTitle,
+:root[data-theme='dark'] .homeContainer .faqQuestionText,
+:root[data-theme='dark'] .homeContainer .modalHeaderTitle,
+:root[data-theme='dark'] .homeContainer .contractorSectionTitle,
+:root[data-theme='dark'] .homeContainer .footerTitle,
+:root[data-theme='dark'] .homeContainer .tickerTitle,
+:root[data-theme='dark'] .homeContainer .whyChooseRightTitle,
+:root[data-theme='dark'] .homeContainer .whyChooseCardTitle,
+:root[data-theme='dark'] .homeContainer .displayCardTitle,
+:root[data-theme='dark'] .homeContainer .priceTierName,
+:root[data-theme='dark'] .homeContainer .faqMainTitle,
+:root[data-theme='dark'] .homeContainer .contactTitle,
+:root[data-theme='dark'] .homeContainer .ctaBannerTitle,
+:root[data-theme='dark'] .homeContainer .priceFeatures li,
+:root[data-theme='dark'] .homeContainer .checkmarkItem span,
+:root[data-theme='dark'] .homeContainer .contractorCard span,
+:root[data-theme='dark'] .homeContainer .rupee,
+:root[data-theme='dark'] .homeContainer .amt,
+:root[data-theme='dark'] .homeContainer .mockStatValue,
+:root[data-theme='dark'] .homeContainer .mockTableTitle,
+:root[data-theme='dark'] .homeContainer .mockBrand,
+:root[data-theme='dark'] .homeContainer .painPointsSectionTitle,
+:root[data-theme='dark'] .homeContainer .resourceCard h3 {
+  color: #ffffff !important;
+}
+
+/* Light Ice-blue Supporting / Body text overrides */
+:root[data-theme='dark'] .homeContainer .painPointText,
+:root[data-theme='dark'] .homeContainer .capabilityText,
+:root[data-theme='dark'] .homeContainer .stepText,
+:root[data-theme='dark'] .homeContainer .faqAnswerText,
+:root[data-theme='dark'] .homeContainer .modalSubtitle,
+:root[data-theme='dark'] .homeContainer .modalItemText,
+:root[data-theme='dark'] .homeContainer .footerLink,
+:root[data-theme='dark'] .homeContainer .footerText,
+:root[data-theme='dark'] .homeContainer .heroSubtitle,
+:root[data-theme='dark'] .homeContainer .checkmarkItem,
+:root[data-theme='dark'] .homeContainer .tickerDesc,
+:root[data-theme='dark'] .homeContainer .whyChooseCardText,
+:root[data-theme='dark'] .homeContainer .displayCardDesc,
+:root[data-theme='dark'] .homeContainer .priceSub,
+:root[data-theme='dark'] .homeContainer .contactText,
+:root[data-theme='dark'] .homeContainer .ctaBannerDesc,
+:root[data-theme='dark'] .homeContainer .per,
+:root[data-theme='dark'] .homeContainer .mockUser,
+:root[data-theme='dark'] .homeContainer .painPointsSectionDesc,
+:root[data-theme='dark'] .homeContainer .resourceCard p {
+  color: #cbd5e1 !important;
+}
+
+:root[data-theme='dark'] .homeContainer .heroSecondaryBtn {
+  background: var(--color-bg-surface) !important;
+  color: #ffffff !important;
   border-color: var(--color-gray-300) !important;
 }

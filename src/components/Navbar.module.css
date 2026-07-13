@@ -25,6 +25,7 @@
   height: 36px;
   border-radius: var(--radius-md);
   object-fit: contain;
+  filter: hue-rotate(280deg) saturate(1.3);
 }
 
 .brandInfo {
