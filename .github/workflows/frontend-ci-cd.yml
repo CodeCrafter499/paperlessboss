@@ -1,0 +1,44 @@
+name: Frontend CI/CD (Dev to Main)
+
+on:
+  push:
+    branches: [ dev, main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install Dependencies & Build
+      run: |
+        npm ci
+        npm run build
+
+  deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy Build to AWS Nginx Web Directory
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: '13.62.50.7'
+        username: 'ubuntu'
+        key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        script: |
+          cd /path/to/your/deployed/frontend-folder
+          git checkout main
+          git pull origin main
+          npm ci
+          npm run build
+          # Copy build output to system Nginx web root directory
+          sudo cp -r build/* /var/www/html/
+          sudo systemctl restart nginx

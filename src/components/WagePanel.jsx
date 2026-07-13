@@ -1,8 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  FileSpreadsheet, Upload, Download, History, RefreshCw, 
-  CheckCircle2, AlertTriangle, FileText, ArrowRight, Loader2,
-  Plus, X
+  Download, RefreshCw, CheckCircle2, FileText, Loader2, Plus
 } from 'lucide-react';
 import { wagesApi } from '../utils/authApi';
 import { saveAs } from 'file-saver';
@@ -64,7 +62,6 @@ export default function WagePanel() {
   const [parseError, setParseError] = useState('');
   const [history, setHistory] = useState([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
 
   const fetchHistory = useCallback(async () => {
@@ -184,32 +181,15 @@ export default function WagePanel() {
 
   const handleGenerate = async () => {
     setState('generating');
-    setIsGenerating(true);
-    setProgress(0);
-
-    const interval = setInterval(() => {
-      setProgress(prev => {
-        if (prev >= 90) {
-          clearInterval(interval);
-          return 90;
-        }
-        return prev + 15;
-      });
-    }, 200);
+    setProgress(50);
 
     try {
       await fetchHistory();
       setProgress(100);
-      setTimeout(() => {
-        setState('done');
-        setIsGenerating(false);
-      }, 500);
+      setState('done');
     } catch (err) {
       alert(`Generation failed: ${err.message}`);
       setState('previewing');
-      setIsGenerating(false);
-    } finally {
-      clearInterval(interval);
     }
   };
 
@@ -358,8 +338,9 @@ export default function WagePanel() {
                 style={{
                   padding: '8px 16px',
                   borderRadius: '6px',
-                  border: '1px solid #cbd5e0',
-                  background: '#fff',
+                  border: '1px solid var(--color-gray-300)',
+                  background: 'var(--color-bg-surface)',
+                  color: 'var(--color-gray-700)',
                   cursor: 'pointer'
                 }}
               >
@@ -371,7 +352,7 @@ export default function WagePanel() {
                   padding: '8px 24px',
                   borderRadius: '6px',
                   border: 'none',
-                  background: 'linear-gradient(135deg, #3182ce, #2b6cb0)',
+                  background: 'linear-gradient(135deg, var(--color-primary), #2b6cb0)',
                   color: '#fff',
                   cursor: 'pointer',
                   fontWeight: 500,
@@ -399,34 +380,34 @@ export default function WagePanel() {
 
       {state === 'generating' && (
         <div style={{
-          background: '#fff',
+          background: 'var(--color-bg-surface)',
           padding: '40px',
           borderRadius: '12px',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-gray-200)',
           textAlign: 'center',
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+          boxShadow: 'var(--shadow-sm)'
         }}>
-          <Loader2 size={40} className={styles.spin} style={{ margin: '0 auto 16px auto', color: '#3182ce' }} />
-          <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Generating compliance PDFs...</h3>
-          <div style={{ width: '300px', height: '6px', background: '#e2e8f0', borderRadius: '3px', margin: '0 auto 16px auto', overflow: 'hidden' }}>
-            <div style={{ width: `${progress}%`, height: '100%', background: '#3182ce', transition: 'width 0.2s' }} />
+          <Loader2 size={40} className={styles.spin} style={{ margin: '0 auto 16px auto', color: 'var(--color-primary)' }} />
+          <h3 style={{ fontSize: '18px', fontWeight: 'bold', margin: '0 0 8px 0', color: 'var(--color-gray-900)' }}>Generating compliance PDFs...</h3>
+          <div style={{ width: '300px', height: '6px', background: 'var(--color-gray-200)', borderRadius: '3px', margin: '0 auto 16px auto', overflow: 'hidden' }}>
+            <div style={{ width: `${progress}%`, height: '100%', background: 'var(--color-primary)', transition: 'width 0.2s' }} />
           </div>
-          <p style={{ color: '#718096', fontSize: '14px', margin: 0 }}>Saving wage records and compiling PDFs.</p>
+          <p style={{ color: 'var(--color-gray-500)', fontSize: '14px', margin: 0 }}>Saving wage records and compiling PDFs.</p>
         </div>
       )}
 
       {state === 'done' && (
         <div style={{
-          background: '#fff',
+          background: 'var(--color-bg-surface)',
           padding: '45px',
           borderRadius: '12px',
-          border: '1px solid #e2e8f0',
+          border: '1px solid var(--color-gray-200)',
           textAlign: 'center',
-          boxShadow: '0 4px 6px -1px rgba(0,0,0,0.05)'
+          boxShadow: 'var(--shadow-sm)'
         }}>
-          <CheckCircle2 size={48} color="#48bb78" style={{ margin: '0 auto 16px auto' }} />
-          <h3 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0' }}>Wage Slips Generated Successfully!</h3>
-          <p style={{ color: '#718096', fontSize: '15px', margin: '0 0 24px 0' }}>
+          <CheckCircle2 size={48} color="var(--color-primary)" style={{ margin: '0 auto 16px auto' }} />
+          <h3 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0 0 8px 0', color: 'var(--color-gray-900)' }}>Wage Slips Generated Successfully!</h3>
+          <p style={{ color: 'var(--color-gray-500)', fontSize: '15px', margin: '0 0 24px 0' }}>
             All wage slip documents are compiled and ready. You can find them in the log below.
           </p>
           <button 
@@ -435,7 +416,7 @@ export default function WagePanel() {
               padding: '10px 20px',
               borderRadius: '6px',
               border: 'none',
-              background: '#3182ce',
+              background: 'var(--color-primary)',
               color: '#fff',
               cursor: 'pointer',
               fontWeight: 500
