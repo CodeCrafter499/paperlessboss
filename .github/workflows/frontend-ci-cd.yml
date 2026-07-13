@@ -42,6 +42,16 @@ jobs:
         name: react-build
         path: build
 
+    - name: Clean Old Build Files from Web Root
+      uses: appleboy/ssh-action@v1.0.3
+      with:
+        host: '13.62.50.7'
+        username: 'ubuntu'
+        key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
+        script: |
+          # Clear all old static files and React bundle hashes
+          sudo rm -rf /var/www/html/*
+
     - name: Copy Build Files to AWS Nginx Web Root
       uses: appleboy/scp-action@v0.1.7
       with:
