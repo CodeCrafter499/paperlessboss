@@ -127,30 +127,6 @@ export async function generateDocxBlob(row) {
     }),
     hrPara(),
 
-    // Salutation
-    new Paragraph({
-      spacing: { before: 160, after: 80 },
-      children: [new TextRun({ text: `Dear ${row.employeeName || 'Employee'},`, size: BODY_SIZE, font: FONT })],
-    }),
-
-    // Subject
-    new Paragraph({
-      spacing: { before: 0, after: 200 },
-      children: [
-        new TextRun({ text: 'Sub: ', bold: true, size: BODY_SIZE, font: FONT }),
-        new TextRun({ text: `Appointment as ${row.designation || 'Employee'} – reg.`, bold: true, size: BODY_SIZE, font: FONT, underline: { type: UnderlineType.SINGLE } }),
-      ],
-    }),
-
-    // Opening
-    new Paragraph({
-      spacing: { before: 0, after: 200 },
-      children: [new TextRun({
-        text: `We are pleased to appoint you in our organisation on the terms and conditions stated below, in accordance with the Code on Wages, 2019 and the Code on Social Security, 2020. Please retain this letter for your records.`,
-        size: BODY_SIZE, font: FONT,
-      })],
-    }),
-
     // Terms heading
     new Paragraph({
       spacing: { before: 160, after: 100 },
@@ -186,8 +162,51 @@ export async function generateDocxBlob(row) {
     spacer(280),
 
     // Employer signature
-    new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun({ text: 'For NLC India Renewables Limited', bold: true, size: BODY_SIZE, font: FONT })] }),
-    spacer(500),
+    new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun({ text: `For ${row.companyName || 'PaperlessBoss Private Limited'}`, bold: true, size: BODY_SIZE, font: FONT })] }),
+    
+    ...(() => {
+      const includeSigStamp = localStorage.getItem('pb_include_signature_stamp') === 'true';
+      const sigImg = localStorage.getItem('pb_signature_img');
+      const stampImg = localStorage.getItem('pb_stamp_img');
+      const children = [];
+
+      if (includeSigStamp) {
+        if (sigImg) {
+          try {
+            const cleanSig = sigImg.substring(sigImg.indexOf(';base64,') + 8);
+            children.push(new ImageRun({
+              data: b64ToUint8(cleanSig),
+              transformation: { width: 120, height: 40 },
+              type: 'png'
+            }));
+          } catch (e) {
+            console.error("Failed to add signature to DOCX:", e);
+          }
+        }
+        if (stampImg) {
+          try {
+            const cleanStamp = stampImg.substring(stampImg.indexOf(';base64,') + 8);
+            children.push(new TextRun({ text: '    ' }));
+            children.push(new ImageRun({
+              data: b64ToUint8(cleanStamp),
+              transformation: { width: 60, height: 60 },
+              type: 'png'
+            }));
+          } catch (e) {
+            console.error("Failed to add stamp to DOCX:", e);
+          }
+        }
+      }
+
+      if (children.length > 0) {
+        return [
+          new Paragraph({ spacing: { before: 80, after: 80 }, children })
+        ];
+      } else {
+        return [spacer(500)];
+      }
+    })(),
+
     new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun({ text: 'Authorised Signatory', bold: true, size: BODY_SIZE, font: FONT })] }),
     new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun({ text: 'Name & Designation: ', bold: true, size: BODY_SIZE, font: FONT })] }),
     new Paragraph({ spacing: { before: 0, after: 60 }, children: [new TextRun({ text: 'Date: ', bold: true, size: BODY_SIZE, font: FONT })] }),
@@ -213,7 +232,7 @@ export async function generateDocxBlob(row) {
   ];
 
   const doc = new Document({
-    creator: 'NLC India Renewables Limited',
+    creator: row.companyName || 'PaperlessBoss Private Limited',
     title: `Appointment Letter – ${row.employeeName || 'Employee'}`,
     sections: [{
       headers: { default: headerSection },

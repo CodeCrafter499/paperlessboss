@@ -4,7 +4,7 @@ import { useSeo } from './hooks/useSeo';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
 import * as XLSX from 'xlsx';
-import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History, ChevronDown, ChevronRight } from 'lucide-react';
+import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History, ChevronDown, ChevronRight, Wallet, Settings } from 'lucide-react';
 
 import UploadZone from './components/UploadZone';
 import ValidationErrors from './components/ValidationErrors';
@@ -15,6 +15,9 @@ import CompanyProfileForm from './components/CompanyProfileForm';
 import SignatoryProfileForm from './components/SignatoryProfileForm';
 import LetterheadUpload from './components/LetterheadUpload';
 import GenerationHistory from './components/GenerationHistory';
+import BillingTab from './components/BillingTab';
+import AdminPanel from './components/AdminPanel';
+import WagePanel from './components/WagePanel';
 import Navbar from './components/Navbar';
 import Home from './components/Home';
 import About from './components/About';
@@ -25,7 +28,7 @@ import { parseExcelFile, validateRows, COLUMN_MAP } from './utils/excelParser';
 import { generateDocxBlob, sanitizeFilename } from './utils/docxGenerator';
 import { generatePdfBlob } from './utils/pdfGenerator';
 import { useAuth } from './context/AuthContext';
-import { validateExcelApi, authApi, profileApi, offerLetterApi } from './utils/authApi';
+import { validateExcelApi, authApi, profileApi, offerLetterApi, billingApi } from './utils/authApi';
 
 import styles from './App.module.css';
 
@@ -96,6 +99,23 @@ function MainApp({ theme, setTheme }) {
   // Settings / Integration States
   const [activeTab, setActiveTab]     = useState('generator'); // 'generator', 'company_profile', 'company_signatory', 'company_letterhead', 'history'
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
+  const [credits, setCredits] = useState(0);
+  const [wageCredits, setWageCredits] = useState(0);
+
+  const refreshCredits = useCallback(() => {
+    if (user) {
+      billingApi.getBalance()
+        .then(res => {
+          setCredits(res.remaining_copies || 0);
+          setWageCredits(res.remaining_wage_copies || 0);
+        })
+        .catch(err => console.error("Failed to load credits:", err));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    refreshCredits();
+  }, [user, refreshCredits]);
 
   useEffect(() => {
     if (user && activeTab === 'generator') {
@@ -288,6 +308,7 @@ function MainApp({ theme, setTheme }) {
               }));
               setGeneratedFiles(mappedFiles);
               setState('done');
+              refreshCredits();
             }
           } catch (pollErr) {
             console.error('Error polling offer letters status:', pollErr);
@@ -450,13 +471,15 @@ function MainApp({ theme, setTheme }) {
     setParseError(''); setGenProgress(0); setGeneratedFiles([]);
   }, []);
 
-  // Get active tab title for the main header bar
   const tabTitles = {
     generator: 'Generate Offer Letters',
+    wages: 'Generate Wage Slips (Form V)',
     company_profile: 'Company Profile Settings',
     company_signatory: 'Authorised Signatory Details',
     company_letterhead: 'Company Letterhead Template',
     history: 'Generation History Log',
+    billing: 'Credit Balance & Pricing',
+    admin_panel: 'Admin Panel',
   };
 
   return (
@@ -501,6 +524,14 @@ function MainApp({ theme, setTheme }) {
           >
             <FileSpreadsheet size={16} />
             <span>Generate Letters</span>
+          </button>
+          <button 
+            type="button"
+            className={`${styles.navItem} ${activeTab === 'wages' ? styles.navItemActive : ''}`}
+            onClick={() => setActiveTab('wages')}
+          >
+            <FileSpreadsheet size={16} />
+            <span>Generate Wages</span>
           </button>
           <button 
             type="button"
@@ -557,12 +588,42 @@ function MainApp({ theme, setTheme }) {
             <History size={16} />
             <span>Generation History</span>
           </button>
+          <button 
+            type="button"
+            className={`${styles.navItem} ${activeTab === 'billing' ? styles.navItemActive : ''}`}
+            onClick={() => setActiveTab('billing')}
+          >
+            <Wallet size={16} />
+            <span>Billing & Credits</span>
+          </button>
+          {user?.email === 'admin@peperlessboss.com' && (
+            <button 
+              type="button"
+              className={`${styles.navItem} ${activeTab === 'admin_panel' ? styles.navItemActive : ''}`}
+              onClick={() => setActiveTab('admin_panel')}
+            >
+              <Settings size={16} />
+              <span>Admin Panel</span>
+            </button>
+          )}
         </nav>
 
         <div className={styles.sidebarFooter}>
-          <div className={styles.sidebarUser} title={user?.email || 'User'}>
-            <User size={14} style={{ flexShrink: 0 }} />
-            <span className={styles.sidebarUserEmail}>{user?.email || 'User'}</span>
+          <div className={styles.sidebarUser} title={user?.email || 'User'} style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-start', borderBottom: '1px solid var(--color-border)', paddingBottom: '10px', marginBottom: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <User size={14} style={{ flexShrink: 0 }} />
+              <span className={styles.sidebarUserEmail} style={{ fontSize: '12px' }}>{user?.email || 'User'}</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Wallet size={12} />
+                <span>{credits} offer copies left</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Wallet size={12} />
+                <span>{wageCredits} wage copies left</span>
+              </div>
+            </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
             <button 
@@ -607,6 +668,18 @@ function MainApp({ theme, setTheme }) {
             </div>
             <div style={{ display: activeTab === 'history' ? 'block' : 'none' }}>
               <GenerationHistory active={activeTab === 'history'} />
+            </div>
+            <div style={{ display: activeTab === 'billing' ? 'block' : 'none' }}>
+              <BillingTab credits={credits} wageCredits={wageCredits} refreshCredits={refreshCredits} />
+            </div>
+            {user?.email === 'admin@peperlessboss.com' && (
+              <div style={{ display: activeTab === 'admin_panel' ? 'block' : 'none' }}>
+                <AdminPanel />
+              </div>
+            )}
+
+            <div style={{ display: activeTab === 'wages' ? 'block' : 'none' }}>
+              <WagePanel />
             </div>
 
             <div style={{ display: activeTab === 'generator' ? 'block' : 'none' }}>
@@ -779,7 +852,7 @@ function MainApp({ theme, setTheme }) {
         </main>
 
         <footer className={styles.footer}>
-          <p>© PaperlessBoss · NLC India Renewables Limited &nbsp;|&nbsp; Code on Wages, 2019 &amp; Code on Social Security, 2020</p>
+          <p>© PaperlessBoss · PaperlessBoss Private Limited &nbsp;|&nbsp; Code on Wages, 2019 &amp; Code on Social Security, 2020</p>
         </footer>
       </div>
     </div>

@@ -17,6 +17,16 @@ function SignatoryProfileForm() {
   const [status, setStatus] = useState({ type: '', message: '' });
   const [errors, setErrors] = useState({});
 
+  const [includeSignatureStamp, setIncludeSignatureStamp] = useState(() => {
+    return localStorage.getItem('pb_include_signature_stamp') === 'true';
+  });
+  const [signatureImg, setSignatureImg] = useState(() => {
+    return localStorage.getItem('pb_signature_img') || '';
+  });
+  const [stampImg, setStampImg] = useState(() => {
+    return localStorage.getItem('pb_stamp_img') || '';
+  });
+
   // Fetch signatory profile on mount
   useEffect(() => {
     profileApi.getSignatory()
@@ -28,6 +38,18 @@ function SignatoryProfileForm() {
           email: data.email || '',
           mobile_no: data.mobile_no || ''
         });
+        if (data.signature_image) {
+          setSignatureImg(data.signature_image);
+          localStorage.setItem('pb_signature_img', data.signature_image);
+        }
+        if (data.stamp_image) {
+          setStampImg(data.stamp_image);
+          localStorage.setItem('pb_stamp_img', data.stamp_image);
+        }
+        if (data.include_signature_stamp !== undefined) {
+          setIncludeSignatureStamp(data.include_signature_stamp);
+          localStorage.setItem('pb_include_signature_stamp', data.include_signature_stamp ? 'true' : 'false');
+        }
       })
       .catch((err) => {
         // If 404, signatory is not filled yet, which is expected.
@@ -111,6 +133,11 @@ function SignatoryProfileForm() {
     });
     // Ensure name is present
     if (!payload.name) payload.name = formData.name;
+    
+    // Add signature/stamp fields to payload
+    payload.signature_image = signatureImg || null;
+    payload.stamp_image = stampImg || null;
+    payload.include_signature_stamp = includeSignatureStamp;
 
     try {
       const updated = await profileApi.upsertSignatory(payload);
@@ -121,6 +148,13 @@ function SignatoryProfileForm() {
         email: updated.email || '',
         mobile_no: updated.mobile_no || ''
       });
+      if (updated.signature_image) setSignatureImg(updated.signature_image);
+      if (updated.stamp_image) setStampImg(updated.stamp_image);
+      if (updated.include_signature_stamp !== undefined) setIncludeSignatureStamp(updated.include_signature_stamp);
+
+      localStorage.setItem('pb_include_signature_stamp', includeSignatureStamp ? 'true' : 'false');
+      localStorage.setItem('pb_signature_img', signatureImg || '');
+      localStorage.setItem('pb_stamp_img', stampImg || '');
       setStatus({ type: 'success', message: 'Authorised Signatory details updated successfully.' });
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Failed to update signatory profile.' });
@@ -253,6 +287,82 @@ function SignatoryProfileForm() {
                 maxLength={1000}
               />
             </div>
+          </div>
+
+          {/* Signature & Stamp Options */}
+          <div style={{ gridColumn: 'span 2', marginTop: '16px', paddingTop: '16px', borderTop: '1px dashed #cbd5e1' }}>
+            <h3 style={{ fontSize: '14px', fontWeight: '700', marginBottom: '12px', color: '#0f172a' }}>Signature & Company Stamp Settings</h3>
+            
+            <div style={{ display: 'flex', gap: '24px', marginBottom: '16px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#334155' }}>
+                <input 
+                  type="radio" 
+                  name="signature_stamp_toggle" 
+                  checked={includeSignatureStamp} 
+                  onChange={() => setIncludeSignatureStamp(true)} 
+                />
+                With Signature and Stamp
+              </label>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: '600', color: '#334155' }}>
+                <input 
+                  type="radio" 
+                  name="signature_stamp_toggle" 
+                  checked={!includeSignatureStamp} 
+                  onChange={() => setIncludeSignatureStamp(false)} 
+                />
+                Without Signature and Stamp
+              </label>
+            </div>
+
+            {includeSignatureStamp && (
+              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                {/* Signature Upload */}
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Authorised Signature (PNG/JPEG)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setSignatureImg(reader.result);
+                        reader.readAsDataURL(file);
+                      }
+                    }} 
+                    style={{ fontSize: '12px', width: '100%' }}
+                  />
+                  {signatureImg && (
+                    <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', background: '#fff', width: 'fit-content' }}>
+                      <img src={signatureImg} alt="Signature Preview" style={{ maxHeight: '40px', maxWidth: '120px', objectFit: 'contain' }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Stamp Upload */}
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Company Stamp (PNG/JPEG)</label>
+                  <input 
+                    type="file" 
+                    accept="image/*" 
+                    onChange={(e) => {
+                      const file = e.target.files[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onloadend = () => setStampImg(reader.result);
+                        reader.readAsDataURL(file);
+                      }
+                    }} 
+                    style={{ fontSize: '12px', width: '100%' }}
+                  />
+                  {stampImg && (
+                    <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', background: '#fff', width: 'fit-content' }}>
+                      <img src={stampImg} alt="Stamp Preview" style={{ maxHeight: '40px', maxWidth: '100px', objectFit: 'contain' }} />
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

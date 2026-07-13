@@ -2,7 +2,7 @@ const getBaseApiUrl = () => {
   if (process.env.REACT_APP_API_BASE_URL) {
     return process.env.REACT_APP_API_BASE_URL;
   }
-  return 'https://paperlessboss.com';
+  return window.location.origin;
 };
 
 
@@ -19,11 +19,11 @@ export const tokenStore = {
 async function request(url, options = {}, isAuthEndpoint = true) {
   const token = tokenStore.get();
   const headers = { ...options.headers };
-  
+
   if (token && !headers.Authorization) {
     headers.Authorization = `Bearer ${token}`;
   }
-  
+
   if (!(options.body instanceof FormData) && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json';
   }
@@ -69,7 +69,7 @@ async function request(url, options = {}, isAuthEndpoint = true) {
       try {
         const errJson = JSON.parse(text);
         detail = errJson.detail || errJson.message || detail;
-      } catch (_) {}
+      } catch (_) { }
       throw new Error(detail);
     }
     return await res.blob();
@@ -168,4 +168,34 @@ export async function validateExcelApi(file) {
     body: formData,
   }, false);
 }
+
+export const billingApi = {
+  getBalance: () =>
+    request('/api/v1/billing/balance', { method: 'GET' }, false),
+  pay: (amount, type) =>
+    request('/api/v1/billing/pay', { method: 'POST', body: JSON.stringify({ amount, type }) }, false),
+  getConfig: () =>
+    request('/api/v1/billing/config', { method: 'GET' }, false),
+  updateConfig: (data) =>
+    request('/api/v1/billing/config', { method: 'POST', body: JSON.stringify(data) }, false),
+};
+
+export const wagesApi = {
+  validateExcel: (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    return request('/api/v1/wages/validate-excel', {
+      method: 'POST',
+      body: formData,
+    }, false);
+  },
+  getHistory: () =>
+    request('/api/v1/wages/history', { method: 'GET' }, false),
+  downloadPdf: (wageId) =>
+    request(`/api/v1/wages/download/${wageId}/pdf`, {
+      method: 'GET',
+      responseType: 'blob',
+    }, false),
+};
+
 

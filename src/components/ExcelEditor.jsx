@@ -6,10 +6,10 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
-import { COLUMN_MAP } from '../utils/excelParser';
+import { COLUMN_MAP as defaultCOLUMN_MAP } from '../utils/excelParser';
 import styles from './ExcelEditor.module.css';
 
-const COLS = [
+const defaultCOLS = [
   { key: 'employeeName',      label: 'Employee Name' },
   { key: 'dateOfBirth',       label: 'Date of Birth' },
   { key: 'parentName',        label: 'Father/Mother Name' },
@@ -40,8 +40,12 @@ export default function ExcelEditor({
   validationResult,
   onRevalidate,
   isGenerating = false,
-  isReadOnly = false
+  isReadOnly = false,
+  columns,
+  columnMap
 }) {
+  const COLS = columns || defaultCOLS;
+  const COLUMN_MAP = columnMap || defaultCOLUMN_MAP;
   const [selectedCell, setSelectedCell] = useState(null); // { rowIndex, colIndex }
   const [editingCell, setEditingCell] = useState(null);   // { rowIndex, colIndex }
   const [editValue, setEditValue] = useState('');

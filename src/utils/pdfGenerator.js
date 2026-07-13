@@ -135,25 +135,7 @@ export async function generatePdfBlob(row) {
   y += 1;
   writeHr([46, 125, 50]); // green line
 
-  y += 3;
-  writeLine(`Dear ${row.employeeName || 'Employee'},`, { size: BODY_PT });
-  y += 2;
-  writeLine('Sub: ', { bold: true, size: BODY_PT });
-  // Write subject on same line
-  y -= LINE_H;
-  doc.setFont(FONT_NORMAL, 'bold');
-  doc.setFontSize(BODY_PT);
-  const subLabel = 'Sub: ';
-  const subLabelW = doc.getTextWidth(subLabel);
-  doc.setFont(FONT_NORMAL, 'normal');
-  const subText = `Appointment as ${row.designation || 'Employee'} – reg.`;
-  doc.text(subText, MARGIN_X + subLabelW, y, { maxWidth: CONTENT_W - subLabelW });
-  y += LINE_H + 3;
-
-  writeLine(
-    'We are pleased to appoint you in our organisation on the terms and conditions stated below, in accordance with the Code on Wages, 2019 and the Code on Social Security, 2020. Please retain this letter for your records.',
-    { size: BODY_PT }
-  );
+  const companyName = row.companyName || 'PaperlessBoss Private Limited';
   y += 4;
 
   writeLine('TERMS OF APPOINTMENT', { bold: true, size: SEC_PT });
@@ -176,8 +158,34 @@ export async function generatePdfBlob(row) {
   );
   y += 8;
 
-  writeLine('For NLC India Renewables Limited', { bold: true, size: BODY_PT });
-  y += 14;
+  writeLine(`For ${companyName}`, { bold: true, size: BODY_PT });
+  
+  const includeSigStamp = localStorage.getItem('pb_include_signature_stamp') === 'true';
+  const sigImg = localStorage.getItem('pb_signature_img');
+  const stampImg = localStorage.getItem('pb_stamp_img');
+
+  if (includeSigStamp) {
+    checkPage(25);
+    let startY = y;
+    if (sigImg) {
+      try {
+        doc.addImage(sigImg, 'PNG', MARGIN_X + 2, startY, 35, 12);
+      } catch (err) {
+        console.error("Failed to render signature image in PDF:", err);
+      }
+    }
+    if (stampImg) {
+      try {
+        doc.addImage(stampImg, 'PNG', MARGIN_X + 45, startY - 4, 18, 18);
+      } catch (err) {
+        console.error("Failed to render stamp image in PDF:", err);
+      }
+    }
+    y += 13;
+  } else {
+    y += 14;
+  }
+  
   writeLine('Authorised Signatory', { bold: true, size: BODY_PT });
   writeLine('Name & Designation: ___________________________', { size: BODY_PT });
   y += 1;
