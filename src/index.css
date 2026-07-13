@@ -51,35 +51,35 @@
 }
 
 :root[data-theme='dark'] {
-  --color-bg-surface:     #0f172a;
-  --color-bg-page:        #020617;
+  --color-bg-surface:     #140e28; /* Deep Amethyst Card Surface */
+  --color-bg-page:        #090514; /* Deep Amethyst Black Page */
   
-  --color-primary:        #3b82f6; /* Premium Blue for dark mode contrast */
-  --color-primary-dark:   #2563eb;
-  --color-primary-darker: #1d4ed8;
-  --color-primary-light:  #1e3a8a;
-  --color-primary-pale:   #0f172a;
+  --color-primary:        #c084fc; /* Radiant Lavender/Purple Accent */
+  --color-primary-dark:   #a855f7;
+  --color-primary-darker: #9333ea;
+  --color-primary-light:  #3b0764;
+  --color-primary-pale:   #1e1b4b;
   
-  --color-accent:         #f1f5f9;
+  --color-accent:         #faf5ff;
 
   /* Semantic - brighter for dark mode */
-  --color-success:        #4ade80;
-  --color-success-bg:     #052e16;
+  --color-success:        #34d399;
+  --color-success-bg:     #064e3b;
   --color-danger:         #f87171;
-  --color-danger-bg:      #450a0a;
+  --color-danger-bg:      #7f1d1d;
   --color-warning:        #fbbf24;
-  --color-warning-bg:     #451a03;
+  --color-warning-bg:     #78350f;
 
-  /* Inverted Grays */
-  --color-gray-50:  #1e293b;
-  --color-gray-100: #334155;
-  --color-gray-200: #475569;
-  --color-gray-300: #64748b;
-  --color-gray-400: #94a3b8;
-  --color-gray-500: #cbd5e1;
-  --color-gray-600: #e2e8f0;
-  --color-gray-700: #f1f5f9;
-  --color-gray-800: #f8fafc;
+  /* Inverted Grays with Purple/Amethyst Tints */
+  --color-gray-50:  #1c1538;
+  --color-gray-100: #2d2254;
+  --color-gray-200: #3b2d6a;
+  --color-gray-300: #584a86;
+  --color-gray-400: #a78bfa;
+  --color-gray-500: #d8b4fe;
+  --color-gray-600: #f3e8ff;
+  --color-gray-700: #faf5ff;
+  --color-gray-800: #fdf4ff;
   --color-gray-900: #ffffff;
 }
 
