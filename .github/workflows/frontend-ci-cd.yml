@@ -64,22 +64,13 @@ jobs:
         target: "/var/www/html"
         strip_components: 1
 
-    - name: Copy Nginx Config to AWS via SCP
-      uses: appleboy/scp-action@v0.1.7
-      with:
-        host: '13.62.50.7'
-        username: 'ubuntu'
-        key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
-        source: "nginx-seo.conf"
-        target: "/home/ubuntu"
-
-    - name: Restart Nginx on AWS via SSH
+    - name: Reload Nginx inside Docker Container via SSH
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: '13.62.50.7'
         username: 'ubuntu'
         key: ${{ secrets.AWS_SSH_PRIVATE_KEY }}
         script: |
-          sudo cp /home/ubuntu/nginx-seo.conf /etc/nginx/sites-available/paperlessboss
-          sudo ln -sf /etc/nginx/sites-available/paperlessboss /etc/nginx/sites-enabled/
-          sudo nginx -t && sudo systemctl reload nginx
+          sudo docker exec paperlessboss_nginx nginx -t
+          sudo docker exec paperlessboss_nginx nginx -s reload
+
