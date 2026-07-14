@@ -2451,3 +2451,32 @@ align-items: flex-start;
   color: #ffffff !important;
   border-color: var(--color-gray-300) !important;
 }
+
+/* Custom responsive overrides for Resources and Contact sections */
+@media (max-width: 968px) {
+  .resourcesGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .contactContainer {
+    flex-direction: column;
+    gap: 40px;
+  }
+  .contactFormSide {
+    padding: 24px;
+    width: 100%;
+  }
+}
+
+@media (max-width: 576px) {
+  .resourcesGrid {
+    grid-template-columns: 1fr;
+  }
+  .formRow {
+    flex-direction: column;
+    gap: 16px;
+  }
+  .contactTitle {
+    font-size: 28px;
+  }
+}
+
