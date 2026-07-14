@@ -39,10 +39,39 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSeo } from '../hooks/useSeo';
+import { authApi } from '../utils/authApi';
 import styles from './Home.module.css';
 
 export default function Home() {
   const { user } = useAuth();
+
+  // Contact Form State
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactSubject, setContactSubject] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactLoading, setContactLoading] = useState(false);
+  const [contactSuccess, setContactSuccess] = useState('');
+  const [contactError, setContactError] = useState('');
+
+  const handleContactSubmit = async (e) => {
+    e.preventDefault();
+    setContactLoading(true);
+    setContactSuccess('');
+    setContactError('');
+    try {
+      const res = await authApi.contact(contactName, contactEmail, contactSubject, contactMessage);
+      setContactSuccess(res.message || 'Message sent successfully!');
+      setContactName('');
+      setContactEmail('');
+      setContactSubject('');
+      setContactMessage('');
+    } catch (err) {
+      setContactError(err.message || 'Failed to send message.');
+    } finally {
+      setContactLoading(false);
+    }
+  };
   
   // Interactive Showcase Tab State
   const [activeShowcase, setActiveShowcase] = useState('dashboard');
@@ -636,7 +665,7 @@ export default function Home() {
               <div className={styles.letterPreviewMock}>
                 <div className={styles.letterMockHeader}>
                   <h4>PAPERLESSBOSS PRIVATE LIMITED</h4>
-                  <p>CodeCrafters Tower, Sector 62, Noida, UP - 201301</p>
+                  <p>CodeCrafters Tower, Visakhapatnam, AP, India</p>
                 </div>
                 <hr />
                 <div className={styles.letterMockBody}>
@@ -940,36 +969,48 @@ export default function Home() {
                 </div>
                 <div>
                   <strong>Office</strong>
-                  <p>CodeCrafters Tower, Noida, UP, India</p>
+                  <p>CodeCrafters Tower, Visakhapatnam, AP, India</p>
                 </div>
               </div>
             </div>
           </div>
 
           <div className={styles.contactFormSide}>
-            <form className={styles.contactForm} onSubmit={(e) => e.preventDefault()}>
+            <form className={styles.contactForm} onSubmit={handleContactSubmit}>
+              {contactSuccess && (
+                <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', marginBottom: '16px', fontSize: '14px' }}>
+                  {contactSuccess}
+                </div>
+              )}
+              {contactError && (
+                <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', marginBottom: '16px', fontSize: '14px' }}>
+                  {contactError}
+                </div>
+              )}
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label htmlFor="name">Full Name</label>
-                  <input type="text" id="name" placeholder="e.g. A. K. Sharma" required />
+                  <input type="text" id="name" placeholder="e.g. A. K. Sharma" value={contactName} onChange={(e) => setContactName(e.target.value)} disabled={contactLoading} required />
                 </div>
                 <div className={styles.formGroup}>
                   <label htmlFor="contactEmail">Email Address</label>
-                  <input type="email" id="contactEmail" placeholder="e.g. sharma@company.com" required />
+                  <input type="email" id="contactEmail" placeholder="e.g. sharma@company.com" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} disabled={contactLoading} required />
                 </div>
               </div>
 
               <div className={styles.formGroup}>
                 <label htmlFor="subject">Subject</label>
-                <input type="text" id="subject" placeholder="How can we help you?" required />
+                <input type="text" id="subject" placeholder="How can we help you?" value={contactSubject} onChange={(e) => setContactSubject(e.target.value)} disabled={contactLoading} required />
               </div>
 
               <div className={styles.formGroup}>
                 <label htmlFor="message">Message</label>
-                <textarea id="message" rows="5" placeholder="Write your query here..." required></textarea>
+                <textarea id="message" rows="5" placeholder="Write your query here..." value={contactMessage} onChange={(e) => setContactMessage(e.target.value)} disabled={contactLoading} required></textarea>
               </div>
 
-              <button type="submit" className={styles.contactSubmitBtn}>Send Message</button>
+              <button type="submit" className={styles.contactSubmitBtn} disabled={contactLoading}>
+                {contactLoading ? 'Sending...' : 'Send Message'}
+              </button>
             </form>
           </div>
         </div>

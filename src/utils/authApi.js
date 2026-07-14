@@ -100,6 +100,9 @@ export const authApi = {
 
   logout: () =>
     request('/logout', { method: 'POST' }),
+
+  contact: (name, email, subject, message) =>
+    request('/contact', { method: 'POST', body: JSON.stringify({ name, email, subject, message }) }),
 };
 
 export const profileApi = {
