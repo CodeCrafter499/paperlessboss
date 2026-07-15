@@ -21,7 +21,7 @@ export default function AuthPage({ initialScreen = 'login' }) {
 
   // ── Dynamic SEO per auth screen ───────────────────────────────────────
   const seoMap = {
-    login: { title: 'Sign In', description: 'Sign in to PaperlessBoss to generate appointment letters from Excel. Secure OTP-based authentication by CodeCrafters Inc.' },
+    login: { title: 'Sign In', description: 'Sign in to PaperlessBoss to generate appointment letters from Excel. Secure OTP-based authentication.' },
     register: { title: 'Create Account', description: 'Create your free PaperlessBoss account to start generating compliant appointment letters instantly from Excel data.' },
     otp: { title: 'Verify Email', description: 'Verify your email address to activate your PaperlessBoss account.', noIndex: true },
     'reg-success': { title: 'Registration Success', description: 'Your PaperlessBoss account is ready.', noIndex: true },
@@ -43,7 +43,7 @@ export default function AuthPage({ initialScreen = 'login' }) {
           <img src={LOGO_SRC} alt="PaperlessBoss logo" className={styles.logoImg} />
           <div>
             <div className={styles.logoName}>PaperlessBoss</div>
-            <div className={styles.logoSub}>CodeCrafters Inc</div>
+            <div className={styles.logoSub}>Simplify Your Labour Documentation Today</div>
           </div>
         </div>
 

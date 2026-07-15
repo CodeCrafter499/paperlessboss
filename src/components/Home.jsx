@@ -35,19 +35,25 @@ import {
   Mail,
   Phone,
   MapPin,
-  X
+  X,
+  Loader2,
+  Hammer
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSeo } from '../hooks/useSeo';
-import { authApi } from '../utils/authApi';
+import { authApi, billingApi } from '../utils/authApi';
 import styles from './Home.module.css';
 
 export default function Home() {
   const { user } = useAuth();
 
+  const [plans, setPlans] = useState([]);
+  const [plansLoading, setPlansLoading] = useState(true);
+
   // Contact Form State
   const [contactName, setContactName] = useState('');
   const [contactEmail, setContactEmail] = useState('');
+  const [contactMobile, setContactMobile] = useState('');
   const [contactSubject, setContactSubject] = useState('');
   const [contactMessage, setContactMessage] = useState('');
   const [contactLoading, setContactLoading] = useState(false);
@@ -60,10 +66,11 @@ export default function Home() {
     setContactSuccess('');
     setContactError('');
     try {
-      const res = await authApi.contact(contactName, contactEmail, contactSubject, contactMessage);
+      const res = await authApi.contact(contactName, contactEmail, contactMobile, contactSubject, contactMessage);
       setContactSuccess(res.message || 'Message sent successfully!');
       setContactName('');
       setContactEmail('');
+      setContactMobile('');
       setContactSubject('');
       setContactMessage('');
     } catch (err) {
@@ -81,6 +88,17 @@ export default function Home() {
 
   // Interactive Resources Modal State
   const [activeModal, setActiveModal] = useState(null); // null, 'knowledge', 'templates', 'updates', 'faqs'
+
+  useEffect(() => {
+    billingApi.getPlans(true)
+      .then((data) => {
+        setPlans(data);
+      })
+      .catch((err) => {
+        console.error('Failed to load plans:', err);
+      })
+      .finally(() => setPlansLoading(false));
+  }, []);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -150,18 +168,7 @@ export default function Home() {
       {/* 1. HERO SECTION */}
       <section className={styles.heroSection}>
         <div className={styles.heroContent}>
-          <div className={styles.indianBadge}>
-            <svg width="18" height="12" viewBox="0 0 900 600" style={{ marginRight: '6px', borderRadius: '2px', display: 'inline-block', verticalAlign: 'middle' }}>
-              <rect width="900" height="200" fill="#FF9933"/>
-              <rect y="200" width="900" height="200" fill="#FFFFFF"/>
-              <rect y="400" width="900" height="200" fill="#128807"/>
-              <circle cx="450" cy="300" r="92" fill="none" stroke="#000080" strokeWidth="8"/>
-              <circle cx="450" cy="300" r="16" fill="#000080"/>
-              <path d="M450,208 L450,392 M358,300 L542,300 M385,235 L515,365 M385,365 L515,235" stroke="#000080" strokeWidth="4"/>
-              <path d="M415,215 L485,385 M485,215 L415,385 M358,265 L542,335 M358,335 L542,265" stroke="#000080" strokeWidth="4"/>
-            </svg>
-            <span style={{ verticalAlign: 'middle' }}>Make in India • For Indian businesses</span>
-          </div>
+
           <h1 className={styles.heroTitle}>
             Labour Compliance <br />
             <span className={styles.heroTitleHighlight}>Made Simple.</span>
@@ -182,6 +189,9 @@ export default function Home() {
               <span>Book Live Demo</span>
             </a>
           </div>
+          <p style={{ fontSize: '12px', color: 'var(--color-gray-500)', marginTop: '-8px', marginBottom: '24px' }}>
+            Built specifically for Indian Contractors
+          </p>
 
           <div className={styles.heroCheckmarks}>
             <div className={styles.checkmarkItem}>
@@ -274,7 +284,7 @@ export default function Home() {
           <div className={styles.tickerItem}>
             <FileCheck size={18} className={styles.tickerIcon} />
             <div>
-              <div className={styles.tickerTitle}>Labour Code Ready</div>
+              <div className={styles.tickerTitle}>Designed to Support Labour Documentation</div>
               <div className={styles.tickerDesc}>Stay fully compliant</div>
             </div>
           </div>
@@ -389,11 +399,7 @@ export default function Home() {
             <h3 className={styles.capabilityTitle}>Employee Master</h3>
             <p className={styles.capabilityText}>Maintain all employee details, credentials, IDs, and joining logs in one secure, searchable central directory.</p>
           </div>
-          <div className={styles.capabilityCard}>
-            <HardDrive size={24} className={styles.capabilityIcon} style={{ color: '#fd7e14' }} />
-            <h3 className={styles.capabilityTitle}>Document Storage</h3>
-            <p className={styles.capabilityText}>Store signed contracts, Aadhaar copies, and compliance forms in our protected cloud vault. Never lose files.</p>
-          </div>
+
           <div className={styles.capabilityCard}>
             <Search size={24} className={styles.capabilityIcon} style={{ color: '#0dcaf0' }} />
             <h3 className={styles.capabilityTitle}>Search Employees</h3>
@@ -418,7 +424,7 @@ export default function Home() {
             <div className={styles.stepCircle}>
               <UserPlus size={22} />
             </div>
-            <h3 className={styles.stepTitle}>Register</h3>
+            <h3 className={styles.stepTitle}>Create Your Company</h3>
             <p className={styles.stepText}>Create your company compliance account in less than 2 minutes.</p>
           </div>
           <div className={styles.stepLine} />
@@ -497,6 +503,14 @@ export default function Home() {
                 <Users size={28} className={styles.contractorIcon} />
                 <span>Labour Supply Contractors</span>
               </div>
+              <div className={styles.contractorCard}>
+                <Hammer size={28} className={styles.contractorIcon} />
+                <span>Mining Contractors</span>
+              </div>
+              <div className={styles.contractorCard}>
+                <Wrench size={28} className={styles.contractorIcon} />
+                <span>Mechanical Contractors</span>
+              </div>
             </div>
           </div>
         </div>
@@ -521,7 +535,7 @@ export default function Home() {
               <tbody>
                 <tr>
                   <td>Word Templates (Error-Prone)</td>
-                  <td className={styles.highlightCol}>Automated Compliant Generation</td>
+                  <td className={styles.highlightCol}>Automated Document Generation</td>
                 </tr>
                 <tr>
                   <td>Excel Sheets scattered on PCs</td>
@@ -760,64 +774,56 @@ export default function Home() {
         <div className={styles.pricingFaqLayout}>
           {/* Pricing cards */}
           <div className={styles.pricingCardsGrid}>
-            
-            {/* Starter */}
-            <div className={styles.priceCard}>
-              <span className={styles.priceTierName}>Starter</span>
-              <p className={styles.priceSub}>Perfect for small contractors</p>
-              <div className={styles.priceValue}>
-                <span className={styles.rupee}>₹</span>
-                <span className={styles.amt}>499</span>
-                <span className={styles.per}>/month</span>
+            {plansLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', gridColumn: '1 / -1', padding: '40px 0' }}>
+                <Loader2 className={styles.loadingSpinner} style={{ width: 24, height: 24, animation: 'spin 1s linear infinite' }} />
               </div>
-              <ul className={styles.priceFeatures}>
-                <li><Check size={14} className={styles.greenCheck} /> Up to 50 Employees</li>
-                <li><Check size={14} className={styles.greenCheck} /> Appointment Letters</li>
-                <li><Check size={14} className={styles.greenCheck} /> Wage Slips</li>
-                <li><Check size={14} className={styles.greenCheck} /> Document Storage</li>
-                <li><Check size={14} className={styles.greenCheck} /> Email Support</li>
-              </ul>
-              <Link to={user ? "/app" : "/signup"} className={styles.priceCardBtn}>Start Free Trial</Link>
-            </div>
+            ) : plans.length === 0 ? (
+              <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '40px 0', color: 'var(--color-gray-400)' }}>
+                No active pricing plans found.
+              </div>
+            ) : (
+              plans.map((plan) => {
+                const isPopular = plan.name.toLowerCase() === 'professional' || plan.name.toLowerCase() === 'growth';
+                const employeeRange = plan.max_employees 
+                  ? `${plan.min_employees}–${plan.max_employees}`
+                  : `${plan.min_employees}+`;
 
-            {/* Professional */}
-            <div className={`${styles.priceCard} ${styles.popularCard}`}>
-              <div className={styles.popularBadge}>Most Popular</div>
-              <span className={styles.priceTierName}>Professional</span>
-              <p className={styles.priceSub}>Ideal for growing businesses</p>
-              <div className={styles.priceValue}>
-                <span className={styles.rupee}>₹</span>
-                <span className={styles.amt}>999</span>
-                <span className={styles.per}>/month</span>
-              </div>
-              <ul className={styles.priceFeatures}>
-                <li><Check size={14} className={styles.greenCheck} /> Up to 200 Employees</li>
-                <li><Check size={14} className={styles.greenCheck} /> All Starter Features</li>
-                <li><Check size={14} className={styles.greenCheck} /> Bulk Upload</li>
-                <li><Check size={14} className={styles.greenCheck} /> Advanced Reports</li>
-                <li><Check size={14} className={styles.greenCheck} /> Priority Support</li>
-              </ul>
-              <Link to={user ? "/app" : "/signup"} className={`${styles.priceCardBtn} ${styles.priceBtnPrimary}`}>Start Free Trial</Link>
-            </div>
+                const featuresList = plan.features ? plan.features.split(',').map(f => f.trim()).filter(Boolean) : [];
 
-            {/* Enterprise */}
-            <div className={styles.priceCard}>
-              <span className={styles.priceTierName}>Enterprise</span>
-              <p className={styles.priceSub}>For large organisations</p>
-              <div className={styles.priceValue}>
-                <span className={styles.rupee}>₹</span>
-                <span className={styles.amt}>1,999</span>
-                <span className={styles.per}>/month</span>
-              </div>
-              <ul className={styles.priceFeatures}>
-                <li><Check size={14} className={styles.greenCheck} /> Unlimited Employees</li>
-                <li><Check size={14} className={styles.greenCheck} /> All Professional Features</li>
-                <li><Check size={14} className={styles.greenCheck} /> Multi-Project Management</li>
-                <li><Check size={14} className={styles.greenCheck} /> Advanced User Roles</li>
-                <li><Check size={14} className={styles.greenCheck} /> Dedicated Support</li>
-              </ul>
-              <a href="#contact" className={styles.priceCardBtn}>Contact Sales</a>
-            </div>
+                return (
+                  <div key={plan.id} className={`${styles.priceCard} ${isPopular ? styles.popularCard : ''}`}>
+                    {isPopular && <div className={styles.popularBadge}>Most Popular</div>}
+                    <span className={styles.priceTierName}>{plan.name}</span>
+                    <p className={styles.priceSub}>Ideal for {employeeRange} Employees</p>
+                    <div className={styles.priceValue}>
+                      {plan.is_custom ? (
+                        <span className={styles.amt} style={{ fontSize: '32px' }}>Custom</span>
+                      ) : (
+                        <>
+                          <span className={styles.rupee}>₹</span>
+                          <span className={styles.amt}>{Math.round(plan.price)}</span>
+                          <span className={styles.per}>/month</span>
+                        </>
+                      )}
+                    </div>
+                    <ul className={styles.priceFeatures}>
+                      <li><Check size={14} className={styles.greenCheck} /> Up to {plan.max_employees ? plan.max_employees : 'unlimited'} Employees</li>
+                      {featuresList.map((feat, fIdx) => (
+                        <li key={fIdx}><Check size={14} className={styles.greenCheck} /> {feat}</li>
+                      ))}
+                    </ul>
+                    {plan.is_custom ? (
+                      <a href="mailto:contact@peperlessboss.com" className={styles.priceCardBtn}>Contact Sales</a>
+                    ) : (
+                      <Link to={user ? "/app" : "/signup"} className={`${styles.priceCardBtn} ${isPopular ? styles.priceBtnPrimary : ''}`}>
+                        Start Free Trial
+                      </Link>
+                    )}
+                  </div>
+                );
+              })
+            )}
           </div>
 
           {/* FAQ Accordion Accordion */}
@@ -848,7 +854,7 @@ export default function Home() {
           <div className={styles.ctaBannerLeft}>
             <h2 className={styles.ctaBannerTitle}>Ready to Go Paperless?</h2>
             <p className={styles.ctaBannerDesc}>
-              Join hundreds of contractors who are simplifying employee documentation 
+              Built for contractors who are simplifying employee documentation 
               and saving valuable time with PaperlessBoss.
             </p>
             
@@ -861,10 +867,6 @@ export default function Home() {
                 <Check size={14} />
                 <span>Cancel Anytime</span>
               </div>
-              <div className={styles.ctaBannerCheckItem}>
-                <Check size={14} />
-                <span>Trusted by Contractors</span>
-              </div>
             </div>
 
             <div className={styles.ctaBannerButtons}>
@@ -875,22 +877,12 @@ export default function Home() {
                 <span>Book Live Demo</span>
               </a>
             </div>
+            <p style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.7)', marginTop: '8px', marginBottom: '0' }}>
+              Built specifically for Indian Contractors
+            </p>
           </div>
           <div className={styles.ctaBannerRight}>
             {/* Elegant Vector/CSS graphic of a professional with a laptop */}
-            <div className={styles.mockLaptopUserCard}>
-              <div className={styles.userHead}>
-                <div className={styles.avatarMock}><User size={24} /></div>
-                <div>
-                  <strong>A. K. Sharma</strong>
-                  <small>HR Lead, Civil Build Corp</small>
-                </div>
-              </div>
-              <p className={styles.userQuote}>"PaperlessBoss cut down our worker registration and appointment letter drafting time from hours to a few minutes. Audit compliance is now 100% stress-free."</p>
-              <div className={styles.quoteStars}>
-                {"★★★★★"}
-              </div>
-            </div>
           </div>
         </div>
       </section>
@@ -939,7 +931,7 @@ export default function Home() {
             <h2 className={styles.contactTitle}>Get in Touch</h2>
             <p className={styles.contactText}>
               Have questions about pricing, bulk licenses, or custom letter formats? 
-              Our compliance team is here to help you get started.
+              Our team is here to help you get started.
             </p>
 
             <div className={styles.contactDetails}>
@@ -996,6 +988,11 @@ export default function Home() {
                   <label htmlFor="contactEmail">Email Address</label>
                   <input type="email" id="contactEmail" placeholder="e.g. sharma@company.com" value={contactEmail} onChange={(e) => setContactEmail(e.target.value)} disabled={contactLoading} required />
                 </div>
+              </div>
+
+              <div className={styles.formGroup}>
+                <label htmlFor="contactMobile">Mobile Number</label>
+                <input type="tel" id="contactMobile" placeholder="e.g. +91 99999 99999" value={contactMobile} onChange={(e) => setContactMobile(e.target.value)} disabled={contactLoading} required />
               </div>
 
               <div className={styles.formGroup}>

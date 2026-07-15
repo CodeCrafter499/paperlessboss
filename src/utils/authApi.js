@@ -101,8 +101,8 @@ export const authApi = {
   logout: () =>
     request('/logout', { method: 'POST' }),
 
-  contact: (name, email, subject, message) =>
-    request('/contact', { method: 'POST', body: JSON.stringify({ name, email, subject, message }) }),
+  contact: (name, email, mobile_no, subject, message) =>
+    request('/contact', { method: 'POST', body: JSON.stringify({ name, email, mobile_no, subject, message }) }),
 };
 
 export const profileApi = {
@@ -181,6 +181,14 @@ export const billingApi = {
     request('/api/v1/billing/config', { method: 'GET' }, false),
   updateConfig: (data) =>
     request('/api/v1/billing/config', { method: 'POST', body: JSON.stringify(data) }, false),
+  getPlans: (activeOnly = false) =>
+    request(`/api/v1/billing/plans?active_only=${activeOnly}`, { method: 'GET' }, false),
+  createPlan: (data) =>
+    request('/api/v1/billing/plans', { method: 'POST', body: JSON.stringify(data) }, false),
+  updatePlan: (id, data) =>
+    request(`/api/v1/billing/plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }, false),
+  deletePlan: (id) =>
+    request(`/api/v1/billing/plans/${id}`, { method: 'DELETE' }, false),
 };
 
 export const wagesApi = {
