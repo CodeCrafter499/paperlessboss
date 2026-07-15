@@ -321,3 +321,32 @@
   color: var(--color-gray-400);
   margin-top: 12px;
 }
+
+@media (max-width: 600px) {
+  .desktopOnly {
+    display: none !important;
+  }
+  .mobileOnly {
+    display: block !important;
+  }
+  .tabsContainer {
+    flex-direction: column !important;
+    gap: 6px !important;
+    border-bottom: none !important;
+  }
+  .tabButton {
+    width: 100% !important;
+    text-align: left !important;
+    padding: 10px 14px !important;
+    border-bottom: none !important;
+    border-left: 3px solid transparent !important;
+    border-radius: var(--radius-md) !important;
+    background-color: var(--color-gray-50) !important;
+  }
+  .tabButtonActive {
+    border-left: 3px solid var(--color-primary) !important;
+    background-color: var(--color-primary-pale) !important;
+    color: var(--color-primary) !important;
+  }
+}
+
