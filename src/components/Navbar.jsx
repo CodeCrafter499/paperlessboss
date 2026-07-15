@@ -86,19 +86,6 @@ export default function Navbar({ theme, setTheme }) {
       </div>
 
       <div className={styles.actions}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--color-primary-pale)', border: '1px solid var(--color-primary-light)', padding: '4px 8px', borderRadius: '20px', fontSize: '10px', fontWeight: '700', color: 'var(--color-primary)', marginRight: '6px' }}>
-          <svg width="14" height="9" viewBox="0 0 900 600" style={{ borderRadius: '1px' }}>
-            <rect width="900" height="200" fill="#FF9933"/>
-            <rect y="200" width="900" height="200" fill="#FFFFFF"/>
-            <rect y="400" width="900" height="200" fill="#128807"/>
-            <circle cx="450" cy="300" r="92" fill="none" stroke="#000080" strokeWidth="8"/>
-            <circle cx="450" cy="300" r="16" fill="#000080"/>
-            <path d="M450,208 L450,392 M358,300 L542,300 M385,235 L515,365 M385,365 L515,235" stroke="#000080" strokeWidth="4"/>
-            <path d="M415,215 L485,385 M485,215 L415,385 M358,265 L542,335 M358,335 L542,265" stroke="#000080" strokeWidth="4"/>
-          </svg>
-          <span>Make in India</span>
-        </div>
-
         <button onClick={toggleTheme} className={styles.themeBtn} title="Toggle Theme">
           {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
         </button>
