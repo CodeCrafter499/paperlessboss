@@ -219,10 +219,11 @@ export default function AdminPanel() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', borderBottom: '1px solid var(--color-gray-200)', marginBottom: '24px', paddingBottom: '4px' }}>
+      <div className={styles.tabsContainer} style={{ display: 'flex', gap: '16px', borderBottom: '1px solid var(--color-gray-200)', marginBottom: '24px', paddingBottom: '4px' }}>
         <button
           type="button"
           onClick={() => { setActiveSubTab('billing_config'); setStatus({ type: '', message: '' }); }}
+          className={`${styles.tabButton} ${activeSubTab === 'billing_config' ? styles.tabButtonActive : ''}`}
           style={{
             background: 'none',
             border: 'none',
@@ -240,6 +241,7 @@ export default function AdminPanel() {
         <button
           type="button"
           onClick={() => { setActiveSubTab('subscription_plans'); setStatus({ type: '', message: '' }); }}
+          className={`${styles.tabButton} ${activeSubTab === 'subscription_plans' ? styles.tabButtonActive : ''}`}
           style={{
             background: 'none',
             border: 'none',
@@ -553,28 +555,103 @@ export default function AdminPanel() {
               No subscription plans found.
             </div>
           ) : (
-            <div style={{ overflowX: 'auto' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
-                <thead>
-                  <tr style={{ borderBottom: '2px solid var(--color-gray-200)', color: 'var(--color-gray-600)', fontWeight: 600 }}>
-                    <th style={{ padding: '12px 8px' }}>Plan Name</th>
-                    <th style={{ padding: '12px 8px' }}>Employees</th>
-                    <th style={{ padding: '12px 8px' }}>Price (Monthly)</th>
-                    <th style={{ padding: '12px 8px' }}>Status</th>
-                    <th style={{ padding: '12px 8px', textAlign: 'right' }}>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
+            <>
+              {/* Desktop Table View */}
+              <div className={styles.desktopOnly} style={{ overflowX: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', textAlign: 'left' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid var(--color-gray-200)', color: 'var(--color-gray-600)', fontWeight: 600 }}>
+                      <th style={{ padding: '12px 8px' }}>Plan Name</th>
+                      <th style={{ padding: '12px 8px' }}>Employees</th>
+                      <th style={{ padding: '12px 8px' }}>Price (Monthly)</th>
+                      <th style={{ padding: '12px 8px' }}>Status</th>
+                      <th style={{ padding: '12px 8px', textAlign: 'right' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {plans.map((plan) => (
+                      <tr key={plan.id} style={{ borderBottom: '1px solid var(--color-gray-100)', verticalAlign: 'middle' }}>
+                        <td style={{ padding: '14px 8px', fontWeight: 600, color: 'var(--color-gray-800)' }}>{plan.name}</td>
+                        <td style={{ padding: '14px 8px', color: 'var(--color-gray-600)' }}>
+                          {plan.min_employees}{plan.max_employees ? `–${plan.max_employees}` : '+'}
+                        </td>
+                        <td style={{ padding: '14px 8px', color: 'var(--color-gray-800)', fontWeight: 600 }}>
+                          {plan.is_custom ? 'Custom' : `₹${parseFloat(plan.price).toLocaleString('en-IN')}`}
+                        </td>
+                        <td style={{ padding: '14px 8px' }}>
+                          <button
+                            type="button"
+                            onClick={() => handleTogglePlanActive(plan)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              background: 'none',
+                              border: 'none',
+                              cursor: 'pointer',
+                              padding: '4px 8px',
+                              borderRadius: '4px',
+                              fontSize: '11px',
+                              fontWeight: 600,
+                              backgroundColor: plan.is_active ? 'rgba(76, 175, 80, 0.1)' : 'rgba(158, 158, 158, 0.1)',
+                              color: plan.is_active ? '#2e7d32' : '#616161',
+                            }}
+                          >
+                            {plan.is_active ? <Eye size={12} /> : <EyeOff size={12} />}
+                            {plan.is_active ? 'Active' : 'Inactive'}
+                          </button>
+                        </td>
+                        <td style={{ padding: '14px 8px', textAlign: 'right' }}>
+                          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleEditPlan(plan)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: 'var(--color-gray-500)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '4px',
+                                borderRadius: '4px',
+                              }}
+                              title="Edit Plan"
+                            >
+                              <Edit size={14} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleDeletePlan(plan.id)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                cursor: 'pointer',
+                                color: '#c62828',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                padding: '4px',
+                                borderRadius: '4px',
+                              }}
+                              title="Delete Plan"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile Card List View */}
+              <div className={styles.mobileOnly} style={{ display: 'none' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                   {plans.map((plan) => (
-                    <tr key={plan.id} style={{ borderBottom: '1px solid var(--color-gray-100)', verticalAlign: 'middle' }}>
-                      <td style={{ padding: '14px 8px', fontWeight: 600, color: 'var(--color-gray-800)' }}>{plan.name}</td>
-                      <td style={{ padding: '14px 8px', color: 'var(--color-gray-600)' }}>
-                        {plan.min_employees}{plan.max_employees ? `–${plan.max_employees}` : '+'}
-                      </td>
-                      <td style={{ padding: '14px 8px', color: 'var(--color-gray-800)', fontWeight: 600 }}>
-                        {plan.is_custom ? 'Custom' : `₹${parseFloat(plan.price).toLocaleString('en-IN')}`}
-                      </td>
-                      <td style={{ padding: '14px 8px' }}>
+                    <div key={plan.id} style={{ border: '1px solid var(--color-gray-200)', borderRadius: '8px', padding: '16px', background: 'var(--color-bg-surface)', boxShadow: 'var(--shadow-sm)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                        <span style={{ fontWeight: 600, fontSize: '15px', color: 'var(--color-gray-800)' }}>{plan.name}</span>
                         <button
                           type="button"
                           onClick={() => handleTogglePlanActive(plan)}
@@ -596,50 +673,34 @@ export default function AdminPanel() {
                           {plan.is_active ? <Eye size={12} /> : <EyeOff size={12} />}
                           {plan.is_active ? 'Active' : 'Inactive'}
                         </button>
-                      </td>
-                      <td style={{ padding: '14px 8px', textAlign: 'right' }}>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-                          <button
-                            type="button"
-                            onClick={() => handleEditPlan(plan)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: 'var(--color-gray-500)',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '4px',
-                              borderRadius: '4px',
-                            }}
-                            title="Edit Plan"
-                          >
-                            <Edit size={14} />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePlan(plan.id)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              cursor: 'pointer',
-                              color: '#c62828',
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              padding: '4px',
-                              borderRadius: '4px',
-                            }}
-                            title="Delete Plan"
-                          >
-                            <Trash2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--color-gray-600)', marginBottom: '4px' }}>
+                        <strong>Employees:</strong> {plan.min_employees}{plan.max_employees ? `–${plan.max_employees}` : '+'}
+                      </div>
+                      <div style={{ fontSize: '13px', color: 'var(--color-gray-800)', fontWeight: 600, marginBottom: '12px' }}>
+                        <strong>Price:</strong> {plan.is_custom ? 'Custom' : `₹${parseFloat(plan.price).toLocaleString('en-IN')}`}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '16px', borderTop: '1px solid var(--color-gray-100)', paddingTop: '10px' }}>
+                        <button
+                          type="button"
+                          onClick={() => handleEditPlan(plan)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-gray-600)', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
+                        >
+                          <Edit size={14} /> Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePlan(plan.id)}
+                          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#c62828', display: 'inline-flex', alignItems: 'center', gap: '4px', fontSize: '13px' }}
+                        >
+                          <Trash2 size={14} /> Delete
+                        </button>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </div>
+              </div>
+            </>
           )}
         </div>
       )}
