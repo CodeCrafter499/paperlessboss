@@ -345,13 +345,29 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.agreementText {
+.agreementCheckboxContainer {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.checkbox {
+  width: 14px;
+  height: 14px;
+  margin-top: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+.agreementCheckboxLabel {
   font-size: 11px;
   color: var(--color-gray-500);
   line-height: 1.5;
-  margin-top: 4px;
-  margin-bottom: 12px;
-  text-align: center;
+  cursor: pointer;
 }
 
 .agreementLink {

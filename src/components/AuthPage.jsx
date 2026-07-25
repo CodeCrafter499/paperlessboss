@@ -119,6 +119,7 @@ function RegisterScreen({ onBack, onRegistered }) {
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [mobileNo, setMobileNo] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -130,11 +131,12 @@ function RegisterScreen({ onBack, onRegistered }) {
     if (mobileNo.length < 10) { setError('Mobile number must be at least 10 digits.'); return; }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
+    if (!agreed) { setError('You must agree to the Terms and Conditions and Privacy Policy to register.'); return; }
     setLoading(true);
-    try { await authApi.register(email, password, mobileNo); onRegistered(email); }
+    try { await authApi.register(email, password, mobileNo, agreed); onRegistered(email); }
     catch (err) { setError(err.message); }
     finally { setLoading(false); }
-  }, [email, password, confirm, mobileNo, onRegistered]);
+  }, [email, password, confirm, mobileNo, agreed, onRegistered]);
 
   return (
     <>
@@ -164,9 +166,19 @@ function RegisterScreen({ onBack, onRegistered }) {
             autoComplete="new-password" disabled={loading} />
         </Field>
         {error && <ErrorMsg msg={error} />}
-        <p className={styles.agreementText}>
-          By clicking you agree to accept <Link to="/terms" target="_blank" className={styles.agreementLink}>Terms and Conditions</Link> and <Link to="/privacy" target="_blank" className={styles.agreementLink}>Privacy Policy</Link> of PaperlessBoss.
-        </p>
+        <div className={styles.agreementCheckboxContainer}>
+          <input
+            type="checkbox"
+            id="agreeCheckbox"
+            checked={agreed}
+            onChange={(e) => setAgreed(e.target.checked)}
+            className={styles.checkbox}
+            disabled={loading}
+          />
+          <label htmlFor="agreeCheckbox" className={styles.agreementCheckboxLabel}>
+            I agree to the <Link to="/terms" target="_blank" className={styles.agreementLink}>Terms and Conditions</Link> and <Link to="/privacy" target="_blank" className={styles.agreementLink}>Privacy Policy</Link> of PaperlessBoss.
+          </label>
+        </div>
         <button type="submit" className={styles.primaryBtn} disabled={loading}>
           {loading ? <Spinner /> : 'Create Account'}
         </button>

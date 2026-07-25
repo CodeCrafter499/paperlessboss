@@ -1,5 +1,5 @@
-Effective Date: [DD/MM/YYYY]
-Last Updated: [DD/MM/YYYY]
+Effective Date: 25 July 2026
+Last Updated: 25 July 2026
 In addition to our Terms of Service, PaperlessBoss respects your privacy and is committed to protecting your personal data.
 This Privacy Policy ("Policy") explains how PaperlessBoss, a proprietary concern owned and operated by Code Crafters ("PaperlessBoss", "we", "our", or "us"), collects, uses, processes, stores, discloses, and protects the personal data of individuals ("you", "your", or "User") who access or use our website, software application, products, or services (collectively referred to as the "Platform").
 This Policy has been prepared in accordance with the Digital Personal Data Protection Act, 2023 ("DPDP Act"), the Information Technology Act, 2000, and other applicable laws of India.
