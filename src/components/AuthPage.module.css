@@ -344,3 +344,24 @@
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.agreementText {
+  font-size: 11px;
+  color: var(--color-gray-500);
+  line-height: 1.5;
+  margin-top: 4px;
+  margin-bottom: 12px;
+  text-align: center;
+}
+
+.agreementLink {
+  color: var(--color-primary);
+  text-decoration: underline;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.agreementLink:hover {
+  color: var(--color-primary-dark);
+}
+

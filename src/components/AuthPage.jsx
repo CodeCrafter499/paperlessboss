@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, RefreshCw, CheckCircle, PartyPopper } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, RefreshCw, CheckCircle, PartyPopper, Phone } from 'lucide-react';
 import { authApi } from '../utils/authApi';
 import { useSeo } from '../hooks/useSeo';
 import { useAuth } from '../context/AuthContext';
@@ -97,6 +98,9 @@ function LoginScreen({ onLogin, onRegister, onForgot }) {
           </button>
         </Field>
         {error && <ErrorMsg msg={error} />}
+        <p className={styles.agreementText}>
+          By clicking you agree to accept <Link to="/terms" target="_blank" className={styles.agreementLink}>Terms and Conditions</Link> and <Link to="/privacy" target="_blank" className={styles.agreementLink}>Privacy Policy</Link> of PaperlessBoss.
+        </p>
         <button type="submit" className={styles.primaryBtn} disabled={loading}>
           {loading ? <Spinner /> : 'Sign In'}
         </button>
@@ -114,6 +118,7 @@ function RegisterScreen({ onBack, onRegistered }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  const [mobileNo, setMobileNo] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -121,14 +126,15 @@ function RegisterScreen({ onBack, onRegistered }) {
   const handleSubmit = useCallback(async (e) => {
     e.preventDefault();
     setError('');
-    if (!email || !password || !confirm) { setError('Please fill in all fields.'); return; }
+    if (!email || !password || !confirm || !mobileNo) { setError('Please fill in all fields.'); return; }
+    if (mobileNo.length < 10) { setError('Mobile number must be at least 10 digits.'); return; }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     setLoading(true);
-    try { await authApi.register(email, password); onRegistered(email); }
+    try { await authApi.register(email, password, mobileNo); onRegistered(email); }
     catch (err) { setError(err.message); }
     finally { setLoading(false); }
-  }, [email, password, confirm, onRegistered]);
+  }, [email, password, confirm, mobileNo, onRegistered]);
 
   return (
     <>
@@ -139,6 +145,10 @@ function RegisterScreen({ onBack, onRegistered }) {
         <Field label="Email address" icon={<Mail size={15} />}>
           <input type="email" placeholder="you@example.com" value={email} autoComplete="email"
             onChange={(e) => setEmail(e.target.value)} className={styles.input} disabled={loading} />
+        </Field>
+        <Field label="Mobile number" icon={<Phone size={15} />}>
+          <input type="tel" placeholder="e.g. 9876543210" value={mobileNo}
+            onChange={(e) => setMobileNo(e.target.value)} className={styles.input} disabled={loading} />
         </Field>
         <Field label="Password" icon={<Lock size={15} />}>
           <input type={showPw ? 'text' : 'password'} placeholder="Minimum 8 characters" value={password}
@@ -154,6 +164,9 @@ function RegisterScreen({ onBack, onRegistered }) {
             autoComplete="new-password" disabled={loading} />
         </Field>
         {error && <ErrorMsg msg={error} />}
+        <p className={styles.agreementText}>
+          By clicking you agree to accept <Link to="/terms" target="_blank" className={styles.agreementLink}>Terms and Conditions</Link> and <Link to="/privacy" target="_blank" className={styles.agreementLink}>Privacy Policy</Link> of PaperlessBoss.
+        </p>
         <button type="submit" className={styles.primaryBtn} disabled={loading}>
           {loading ? <Spinner /> : 'Create Account'}
         </button>

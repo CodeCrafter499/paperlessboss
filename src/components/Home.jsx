@@ -1026,32 +1026,32 @@ export default function Home() {
           
           <div className={styles.footerLinkCol}>
             <h4>Product</h4>
-            <a href="#features">Features</a>
-            <a href="#pricing">Pricing</a>
+            <Link to="/#features">Features</Link>
+            <Link to="/#pricing">Pricing</Link>
             <a href="#security">Security</a>
             <a href="#integrations">Integrations</a>
           </div>
 
           <div className={styles.footerLinkCol}>
             <h4>Company</h4>
-            <a href="#about">About Us</a>
-            <a href="#contact">Contact Us</a>
-            <a href="#privacy">Privacy Policy</a>
-            <a href="#terms">Terms & Conditions</a>
+            <Link to="/about">About Us</Link>
+            <Link to="/#contact">Contact Us</Link>
+            <Link to="/privacy">Privacy Policy</Link>
+            <Link to="/terms">Terms & Conditions</Link>
           </div>
 
           <div className={styles.footerLinkCol}>
             <h4>Resources</h4>
-            <a href="#knowledge-center">📘 Knowledge Centre</a>
-            <a href="#templates">📄 Free Templates</a>
-            <a href="#faqs">❓ FAQs</a>
-            <a href="#updates">📢 Updates</a>
+            <Link to="/#knowledge-center">📘 Knowledge Centre</Link>
+            <Link to="/#templates">📄 Free Templates</Link>
+            <Link to="/#faqs">❓ FAQs</Link>
+            <Link to="/#updates">📢 Updates</Link>
           </div>
 
           <div className={styles.footerLinkCol}>
             <h4>Support</h4>
             <a href="#help">Help Center</a>
-            <a href="#contact">Contact Support</a>
+            <Link to="/#contact">Contact Support</Link>
             <a href="mailto:contact@peperlessboss.com">Request Demo</a>
           </div>
         </div>

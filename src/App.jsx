@@ -23,6 +23,9 @@ import Home from './components/Home';
 import About from './components/About';
 import LoginPage from './components/LoginPage';
 import SignupPage from './components/SignupPage';
+import TermsPage from './components/TermsPage';
+import PrivacyPage from './components/PrivacyPage';
+import ScrollToHash from './components/ScrollToHash';
 
 import { parseExcelFile, validateRows, COLUMN_MAP } from './utils/excelParser';
 import { useAuth } from './context/AuthContext';
@@ -62,9 +65,12 @@ export default function App() {
 
   return (
     <Router>
+      <ScrollToHash />
       <Routes>
         <Route path="/" element={<><Navbar theme={theme} setTheme={setTheme} /><Home /></>} />
         <Route path="/about" element={<><Navbar theme={theme} setTheme={setTheme} /><About /></>} />
+        <Route path="/terms" element={<><Navbar theme={theme} setTheme={setTheme} /><TermsPage /></>} />
+        <Route path="/privacy" element={<><Navbar theme={theme} setTheme={setTheme} /><PrivacyPage /></>} />
         <Route path="/login" element={user ? <Navigate to="/app" replace /> : <><Navbar theme={theme} setTheme={setTheme} /><LoginPage /></>} />
         <Route path="/signup" element={user ? <Navigate to="/app" replace /> : <><Navbar theme={theme} setTheme={setTheme} /><SignupPage /></>} />
         <Route path="/app" element={user ? <MainApp theme={theme} setTheme={setTheme} /> : <Navigate to="/login" replace />} />

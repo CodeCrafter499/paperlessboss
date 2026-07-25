@@ -83,8 +83,8 @@ async function request(url, options = {}, isAuthEndpoint = true) {
 }
 
 export const authApi = {
-  register: (email, password) =>
-    request('/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (email, password, mobile_no) =>
+    request('/register', { method: 'POST', body: JSON.stringify({ email, password, mobile_no }) }),
 
   verifyOtp: (email, otp_code) =>
     request('/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp_code }) }),
