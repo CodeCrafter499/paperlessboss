@@ -50,34 +50,34 @@ export default function Navbar({ theme, setTheme }) {
         <NavLink to="/" className={({ isActive }) => `${styles.link} ${isActive ? styles.activeLink : ''}`}>
           Home
         </NavLink>
-        <a href="/#features" className={styles.link}>
+        <Link to="/#features" className={styles.link}>
           Features
-        </a>
-        <a href="/#pricing" className={styles.link}>
+        </Link>
+        <Link to="/#pricing" className={styles.link}>
           Pricing
-        </a>
+        </Link>
         <div className={styles.dropdown}>
           <span className={styles.link} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
             Resources <ChevronDown size={14} />
           </span>
           <div className={styles.dropdownMenu}>
-            <a href="/#knowledge-center" className={styles.dropdownItem}>
+            <Link to="/#knowledge-center" className={styles.dropdownItem}>
               <span>📘</span> Knowledge Centre
-            </a>
-            <a href="/#templates" className={styles.dropdownItem}>
+            </Link>
+            <Link to="/#templates" className={styles.dropdownItem}>
               <span>📄</span> Free Templates
-            </a>
-            <a href="/#faqs" className={styles.dropdownItem}>
+            </Link>
+            <Link to="/#faqs" className={styles.dropdownItem}>
               <span>❓</span> FAQs
-            </a>
-            <a href="/#updates" className={styles.dropdownItem}>
+            </Link>
+            <Link to="/#updates" className={styles.dropdownItem}>
               <span>📢</span> Updates
-            </a>
+            </Link>
           </div>
         </div>
-        <a href="/#contact" className={styles.link}>
+        <Link to="/#contact" className={styles.link}>
           Contact
-        </a>
+        </Link>
         {user && (
           <NavLink to="/app" className={({ isActive }) => `${styles.link} ${isActive ? styles.activeLink : ''}`}>
             Dashboard

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Building2, MapPin, CreditCard, Hash, Mail, Phone, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
-import { profileApi } from '../utils/authApi';
+import { profileApi, authApi } from '../utils/authApi';
 import styles from './ProfileForms.module.css';
 
 function CompanyProfileForm() {
@@ -17,8 +17,28 @@ function CompanyProfileForm() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [errors, setErrors] = useState({});
+
+  const handleDeleteAccount = useCallback(async () => {
+    if (deleteConfirmInput !== "DELETE MY ACCOUNT") return;
+
+    setDeleting(true);
+    setStatus({ type: '', message: '' });
+    try {
+      await authApi.deleteAccount();
+      localStorage.removeItem('pb_access_token');
+      alert("Your account has been successfully deleted.");
+      window.location.href = '/signup';
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message || 'Failed to delete account. Please try again.' });
+    } finally {
+      setDeleting(false);
+    }
+  }, [deleteConfirmInput]);
 
   // Fetch company profile on mount
   useEffect(() => {
@@ -368,11 +388,70 @@ function CompanyProfileForm() {
               <span>{status.message}</span>
             </div>
           )}
-          <button type="submit" className={styles.btn} disabled={saving}>
+          <button type="submit" className={styles.btn} disabled={saving || deleting}>
             {saving ? <><Loader2 className={styles.loadingSpinner} /> Saving Profile…</> : 'Save Company Details'}
           </button>
         </div>
       </form>
+
+      <div className={styles.dangerZone}>
+        <h3 className={styles.dangerZoneTitle}>Danger Zone</h3>
+        <p className={styles.dangerZoneText}>
+          Permanently delete your PaperlessBoss account, company profile, and all associated employees, wage slips, and generated letters. This action cannot be undone.
+        </p>
+
+        {!showDeleteConfirm ? (
+          <button
+            type="button"
+            className={styles.deleteBtn}
+            onClick={() => setShowDeleteConfirm(true)}
+            disabled={saving || deleting}
+          >
+            Delete Account
+          </button>
+        ) : (
+          <div className={styles.confirmDeleteContainer}>
+            <p className={styles.confirmDeleteWarning}>
+              ⚠️ WARNING: This will permanently delete your user account, company configurations, and all historical documentation.
+            </p>
+            <div className={styles.confirmInputGroup}>
+              <label htmlFor="deleteConfirmText" className={styles.confirmLabel}>
+                To confirm, please type <strong>DELETE MY ACCOUNT</strong> below:
+              </label>
+              <input
+                id="deleteConfirmText"
+                type="text"
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                placeholder="DELETE MY ACCOUNT"
+                className={styles.confirmInput}
+                disabled={deleting}
+              />
+            </div>
+            <div className={styles.confirmActions}>
+              <button
+                type="button"
+                className={styles.deleteBtnFinal}
+                onClick={handleDeleteAccount}
+                disabled={deleteConfirmInput !== 'DELETE MY ACCOUNT' || deleting}
+              >
+                {deleting ? <><Loader2 className={styles.loadingSpinner} /> Deleting Account…</> : 'Permanently Delete Account'}
+              </button>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={() => {
+                  setShowDeleteConfirm(false);
+                  setDeleteConfirmInput('');
+                }}
+                disabled={deleting}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

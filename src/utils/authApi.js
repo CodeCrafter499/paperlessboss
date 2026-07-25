@@ -83,8 +83,8 @@ async function request(url, options = {}, isAuthEndpoint = true) {
 }
 
 export const authApi = {
-  register: (email, password) =>
-    request('/register', { method: 'POST', body: JSON.stringify({ email, password }) }),
+  register: (email, password, mobile_no, agreed_to_terms) =>
+    request('/register', { method: 'POST', body: JSON.stringify({ email, password, mobile_no, agreed_to_terms }) }),
 
   verifyOtp: (email, otp_code) =>
     request('/verify-otp', { method: 'POST', body: JSON.stringify({ email, otp_code }) }),
@@ -100,6 +100,9 @@ export const authApi = {
 
   logout: () =>
     request('/logout', { method: 'POST' }),
+
+  deleteAccount: () =>
+    request('/delete-account', { method: 'DELETE' }),
 
   contact: (name, email, mobile_no, subject, message) =>
     request('/contact', { method: 'POST', body: JSON.stringify({ name, email, mobile_no, subject, message }) }),
