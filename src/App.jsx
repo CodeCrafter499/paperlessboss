@@ -16,6 +16,7 @@ import SignatoryProfileForm from './components/SignatoryProfileForm';
 import LetterheadUpload from './components/LetterheadUpload';
 import GenerationHistory from './components/GenerationHistory';
 import BillingTab from './components/BillingTab';
+import PaymentStatus from './components/PaymentStatus';
 import AdminPanel from './components/AdminPanel';
 import WagePanel from './components/WagePanel';
 import Navbar from './components/Navbar';
@@ -73,6 +74,7 @@ export default function App() {
         <Route path="/privacy" element={<><Navbar theme={theme} setTheme={setTheme} /><PrivacyPage /></>} />
         <Route path="/login" element={user ? <Navigate to="/app" replace /> : <><Navbar theme={theme} setTheme={setTheme} /><LoginPage /></>} />
         <Route path="/signup" element={user ? <Navigate to="/app" replace /> : <><Navbar theme={theme} setTheme={setTheme} /><SignupPage /></>} />
+        <Route path="/payment-status" element={<><Navbar theme={theme} setTheme={setTheme} /><PaymentStatus /></>} />
         <Route path="/app" element={user ? <MainApp theme={theme} setTheme={setTheme} /> : <Navigate to="/login" replace />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -58,14 +58,14 @@ export default function BillingTab({ credits, wageCredits = 0, refreshCredits })
 
     setSaving(true);
     try {
-      const res = await billingApi.pay(amount, rechargeType);
-      setStatus({ 
-        type: 'success', 
-        message: `Payment of ₹${amount} simulated successfully! Added ${res.copies_added} copies to your ${rechargeType === 'offer_letter' ? 'Offer Letters' : 'Wage Slips'} balance.` 
-      });
-      refreshCredits();
+      const res = await billingApi.initiatePhonePe(amount, rechargeType);
+      if (res && res.redirect_url) {
+        window.location.href = res.redirect_url;
+      } else {
+        throw new Error("No redirect URL returned from payment server.");
+      }
     } catch (err) {
-      setStatus({ type: 'error', message: err.message || 'Payment simulation failed.' });
+      setStatus({ type: 'error', message: err.message || 'Payment initiation failed.' });
     } finally {
       setSaving(false);
     }
