@@ -180,6 +180,10 @@ export const billingApi = {
     request('/api/v1/billing/balance', { method: 'GET' }, false),
   pay: (amount, type) =>
     request('/api/v1/billing/pay', { method: 'POST', body: JSON.stringify({ amount, type }) }, false),
+  initiatePhonePe: (amount, type) =>
+    request('/api/v1/billing/phonepe/initiate', { method: 'POST', body: JSON.stringify({ amount, type }) }, false),
+  getPhonePeStatus: (merchantTransactionId) =>
+    request(`/api/v1/billing/phonepe/status/${merchantTransactionId}`, { method: 'GET' }, false),
   getConfig: () =>
     request('/api/v1/billing/config', { method: 'GET' }, false),
   updateConfig: (data) =>
