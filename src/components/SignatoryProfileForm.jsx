@@ -105,7 +105,9 @@ function SignatoryProfileForm() {
     }
 
     // Email
-    if (formData.email) {
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = 'Email Address is required.';
+    } else {
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,8}$/;
       if (!emailRegex.test(formData.email)) {
         newErrors.email = 'Invalid email address format.';
@@ -318,7 +320,7 @@ function SignatoryProfileForm() {
               <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
                 {/* Signature Upload */}
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Authorised Signature (PNG/JPEG)</label>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Authorised Signature (PNG/JPEG) (Optional)</label>
                   <input 
                     type="file" 
                     accept="image/*" 
@@ -341,7 +343,7 @@ function SignatoryProfileForm() {
 
                 {/* Stamp Upload */}
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Company Stamp (PNG/JPEG)</label>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Company Stamp (PNG/JPEG) (Optional)</label>
                   <input 
                     type="file" 
                     accept="image/*" 

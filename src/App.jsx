@@ -379,8 +379,8 @@ function MainApp({ theme, setTheme }) {
   }, []);
 
   const tabTitles = {
-    generator: 'Generate Offer Letters',
-    wages: 'Generate Wage Slips (Form V)',
+    generator: 'Appointment Letters',
+    wages: 'Wage Slips (Form V)',
     company_profile: 'Company Profile Settings',
     company_signatory: 'Authorised Signatory Details',
     company_letterhead: 'Company Letterhead Template',
@@ -430,7 +430,7 @@ function MainApp({ theme, setTheme }) {
             onClick={() => setActiveTab('generator')}
           >
             <FileSpreadsheet size={16} />
-            <span>Generate Letters</span>
+            <span>Appointment Letters</span>
           </button>
           <button 
             type="button"
@@ -438,7 +438,7 @@ function MainApp({ theme, setTheme }) {
             onClick={() => setActiveTab('wages')}
           >
             <FileSpreadsheet size={16} />
-            <span>Generate Wages</span>
+            <span>Wage Slips</span>
           </button>
           <button 
             type="button"

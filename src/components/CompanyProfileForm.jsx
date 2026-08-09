@@ -145,7 +145,9 @@ function CompanyProfileForm() {
     }
 
     // Email
-    if (formData.email) {
+    if (!formData.email || !formData.email.trim()) {
+      newErrors.email = 'Corporate Email Address is required.';
+    } else {
       const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,8}$/;
       if (!emailRegex.test(formData.email)) {
         newErrors.email = 'Invalid email address format.';

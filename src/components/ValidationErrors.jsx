@@ -71,7 +71,7 @@ export default function ValidationErrors({ result, filename, onReupload }) {
           <div>
             <p className={styles.summaryTitle}>
               {success
-                ? 'Validation passed — ready to generate letters'
+                ? 'Validation passed — ready to generate'
                 : `Validation failed — ${invalidRecords} of ${totalRecords} records have errors`
               }
             </p>

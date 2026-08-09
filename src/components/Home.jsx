@@ -184,7 +184,7 @@ export default function Home() {
               <span>Start Free Trial</span>
               <ArrowRight size={16} />
             </Link>
-            <a href="mailto:contact@peperlessboss.com" className={styles.heroSecondaryBtn}>
+            <a href="mailto:contact@paperlessboss.com" className={styles.heroSecondaryBtn}>
               <Calendar size={16} />
               <span>Book Live Demo</span>
             </a>
@@ -194,10 +194,6 @@ export default function Home() {
           </p>
 
           <div className={styles.heroCheckmarks}>
-            <div className={styles.checkmarkItem}>
-              <CheckCircle2 size={16} className={styles.checkIcon} />
-              <span>No Credit Card Required</span>
-            </div>
             <div className={styles.checkmarkItem}>
               <CheckCircle2 size={16} className={styles.checkIcon} />
               <span>Setup in 2 Minutes</span>
@@ -679,7 +675,7 @@ export default function Home() {
               <div className={styles.letterPreviewMock}>
                 <div className={styles.letterMockHeader}>
                   <h4>PAPERLESSBOSS PRIVATE LIMITED</h4>
-                  <p>CodeCrafters Tower, Visakhapatnam, AP, India</p>
+                  <p>Visakhapatnam, Andhra Pradesh</p>
                 </div>
                 <hr />
                 <div className={styles.letterMockBody}>
@@ -814,7 +810,7 @@ export default function Home() {
                       ))}
                     </ul>
                     {plan.is_custom ? (
-                      <a href="mailto:contact@peperlessboss.com" className={styles.priceCardBtn}>Contact Sales</a>
+                      <a href="mailto:contact@paperlessboss.com" className={styles.priceCardBtn}>Contact Sales</a>
                     ) : (
                       <Link to={user ? "/app" : "/signup"} className={`${styles.priceCardBtn} ${isPopular ? styles.priceBtnPrimary : ''}`}>
                         Start Free Trial
@@ -873,7 +869,7 @@ export default function Home() {
               <Link to={user ? "/app" : "/signup"} className={styles.ctaBannerBtnPrimary}>
                 <span>Start Free Trial</span>
               </Link>
-              <a href="mailto:contact@peperlessboss.com" className={styles.ctaBannerBtnSecondary}>
+              <a href="mailto:contact@paperlessboss.com" className={styles.ctaBannerBtnSecondary}>
                 <span>Book Live Demo</span>
               </a>
             </div>
@@ -941,7 +937,7 @@ export default function Home() {
                 </div>
                 <div>
                   <strong>Email Support</strong>
-                  <p><a href="mailto:support@peperlessboss.com">support@peperlessboss.com</a></p>
+                  <p><a href="mailto:contact@paperlessboss.com">contact@paperlessboss.com</a></p>
                 </div>
               </div>
 
@@ -961,7 +957,7 @@ export default function Home() {
                 </div>
                 <div>
                   <strong>Office</strong>
-                  <p>CodeCrafters Tower, Visakhapatnam, AP, India</p>
+                  <p>Visakhapatnam, Andhra Pradesh</p>
                 </div>
               </div>
             </div>
@@ -1052,7 +1048,7 @@ export default function Home() {
             <h4>Support</h4>
             <a href="#help">Help Center</a>
             <Link to="/#contact">Contact Support</Link>
-            <a href="mailto:contact@peperlessboss.com">Request Demo</a>
+            <a href="mailto:contact@paperlessboss.com">Request Demo</a>
           </div>
         </div>
 
