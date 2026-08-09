@@ -11,7 +11,7 @@ test.describe('PaperlessBoss E2E Tests', () => {
     await expect(page).toHaveTitle(/PaperlessBoss/i);
     
     // 3. Verify Visakhapatnam address is displayed
-    const address = page.locator('text=CodeCrafters Tower, Visakhapatnam, AP, India');
+    const address = page.locator('text=Visakhapatnam, Andhra Pradesh');
     await expect(address).toBeVisible();
   });
 

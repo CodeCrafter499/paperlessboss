@@ -41,7 +41,7 @@ export default function GeneratePanel({
         <button className={styles.btn} onClick={onGenerate} disabled={isGenerating}>
           {isGenerating
             ? <><Loader2 size={16} className={styles.spin} /> Generating…</>
-            : <><FileText size={16} /> Generate Letters</>
+            : <><FileText size={16} /> Generate Appointment Letters</>
           }
         </button>
       </div>
