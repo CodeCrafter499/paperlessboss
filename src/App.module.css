@@ -269,7 +269,7 @@
 .steps {
   display: flex;
   align-items: center;
-  gap: 0;
+  gap: 8px;
   padding: 4px 0 8px;
 }
 
@@ -294,7 +294,7 @@
 .stepLine {
   flex: 1; height: 2px;
   background: var(--color-gray-200);
-  margin: 0 8px; min-width: 24px;
+  margin: 0 10px; min-width: 24px;
   transition: background 0.2s;
   border-radius: 1px;
 }
@@ -345,6 +345,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 24px;
+  margin-bottom: 20px;
 }
 
 @media (max-width: 768px) {

@@ -49,6 +49,7 @@ export default function Home() {
 
   const [plans, setPlans] = useState([]);
   const [plansLoading, setPlansLoading] = useState(true);
+  const [planAddons, setPlanAddons] = useState({ overage_rate: 15, docx_addon_price: 299 });
 
   // Contact Form State
   const [contactName, setContactName] = useState('');
@@ -98,6 +99,12 @@ export default function Home() {
         console.error('Failed to load plans:', err);
       })
       .finally(() => setPlansLoading(false));
+
+    billingApi.getPlanAddons()
+      .then((data) => {
+        if (data) setPlanAddons(data);
+      })
+      .catch(() => {/* fallback defaults already set */});
   }, []);
 
   useEffect(() => {
@@ -768,61 +775,89 @@ export default function Home() {
         </div>
 
         <div className={styles.pricingFaqLayout}>
-          {/* Pricing cards */}
-          <div className={styles.pricingCardsGrid}>
-            {plansLoading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', gridColumn: '1 / -1', padding: '40px 0' }}>
-                <Loader2 className={styles.loadingSpinner} style={{ width: 24, height: 24, animation: 'spin 1s linear infinite' }} />
-              </div>
-            ) : plans.length === 0 ? (
-              <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '40px 0', color: 'var(--color-gray-400)' }}>
-                No active pricing plans found.
-              </div>
-            ) : (
-              plans.map((plan) => {
-                const isPopular = plan.name.toLowerCase() === 'professional' || plan.name.toLowerCase() === 'growth';
-                const employeeRange = plan.max_employees 
-                  ? `${plan.min_employees}–${plan.max_employees}`
-                  : `${plan.min_employees}+`;
+          {/* LEFT COLUMN: plans + addon notes */}
+          <div className={styles.pricingLeftCol}>
+            {/* Pricing cards grid */}
+            <div className={styles.pricingCardsGrid}>
+              {plansLoading ? (
+                <div style={{ display: 'flex', justifyContent: 'center', gridColumn: '1 / -1', padding: '40px 0' }}>
+                  <Loader2 className={styles.loadingSpinner} style={{ width: 24, height: 24, animation: 'spin 1s linear infinite' }} />
+                </div>
+              ) : plans.length === 0 ? (
+                <div style={{ textAlign: 'center', gridColumn: '1 / -1', padding: '40px 0', color: 'var(--color-gray-400)' }}>
+                  No active pricing plans found.
+                </div>
+              ) : (
+                plans.map((plan) => {
+                  const isPopular = plan.name.toLowerCase() === 'professional' || plan.name.toLowerCase() === 'growth';
+                  const employeeLabel = plan.max_employees
+                    ? `Up to ${plan.max_employees} Employees`
+                    : `${plan.min_employees}+ Employees`;
 
-                const featuresList = plan.features ? plan.features.split(',').map(f => f.trim()).filter(Boolean) : [];
+                  const featuresList = plan.features ? plan.features.split(',').map(f => f.trim()).filter(Boolean) : [];
 
-                return (
-                  <div key={plan.id} className={`${styles.priceCard} ${isPopular ? styles.popularCard : ''}`}>
-                    {isPopular && <div className={styles.popularBadge}>Most Popular</div>}
-                    <span className={styles.priceTierName}>{plan.name}</span>
-                    <p className={styles.priceSub}>Ideal for {employeeRange} Employees</p>
-                    <div className={styles.priceValue}>
+                  return (
+                    <div key={plan.id} className={`${styles.priceCard} ${isPopular ? styles.popularCard : ''}`}>
+                      {isPopular && <div className={styles.popularBadge}>Most Popular</div>}
+                      <span className={styles.priceTierName}>{plan.name}</span>
+                      <p className={styles.priceSub}>{employeeLabel}</p>
+                      <div className={styles.priceValue}>
+                        {plan.is_custom ? (
+                          <span className={styles.amt} style={{ fontSize: '28px' }}>Custom</span>
+                        ) : (
+                          <>
+                            <span className={styles.rupee}>₹</span>
+                            <span className={styles.amt}>{Math.round(plan.price)}</span>
+                            <span className={styles.per}>/mo</span>
+                          </>
+                        )}
+                      </div>
+                      <ul className={styles.priceFeatures}>
+                        {featuresList.map((feat, fIdx) => (
+                          <li key={fIdx}><Check size={13} className={styles.greenCheck} /> {feat}</li>
+                        ))}
+                      </ul>
                       {plan.is_custom ? (
-                        <span className={styles.amt} style={{ fontSize: '32px' }}>Custom</span>
+                        <a href="mailto:contact@paperlessboss.com" className={styles.priceCardBtn}>Contact Sales</a>
                       ) : (
-                        <>
-                          <span className={styles.rupee}>₹</span>
-                          <span className={styles.amt}>{Math.round(plan.price)}</span>
-                          <span className={styles.per}>/month</span>
-                        </>
+                        <Link to={user ? "/app" : "/signup"} className={`${styles.priceCardBtn} ${isPopular ? styles.priceBtnPrimary : ''}`}>
+                          Get Started
+                        </Link>
                       )}
                     </div>
-                    <ul className={styles.priceFeatures}>
-                      <li><Check size={14} className={styles.greenCheck} /> Up to {plan.max_employees ? plan.max_employees : 'unlimited'} Employees</li>
-                      {featuresList.map((feat, fIdx) => (
-                        <li key={fIdx}><Check size={14} className={styles.greenCheck} /> {feat}</li>
-                      ))}
-                    </ul>
-                    {plan.is_custom ? (
-                      <a href="mailto:contact@paperlessboss.com" className={styles.priceCardBtn}>Contact Sales</a>
-                    ) : (
-                      <Link to={user ? "/app" : "/signup"} className={`${styles.priceCardBtn} ${isPopular ? styles.priceBtnPrimary : ''}`}>
-                        Start Free Trial
-                      </Link>
-                    )}
+                  );
+                })
+              )}
+            </div>
+
+            {/* Add-on notes — below all plan cards */}
+            {!plansLoading && plans.length > 0 && (
+              <div className={styles.addonNotesRow}>
+                <div className={styles.addonNoteCard} style={{ borderColor: 'rgba(13,110,253,0.25)', background: 'linear-gradient(135deg,rgba(13,110,253,0.06),rgba(13,110,253,0.02))' }}>
+                  <span className={styles.addonNoteEmoji}>📊</span>
+                  <div>
+                    <strong className={styles.addonNoteTitle}>Flexible Overage</strong>
+                    <span className={styles.addonNotePrice}> — ₹{planAddons.overage_rate}/employee/month</span>
+                    <p className={styles.addonNoteDesc}>
+                      Need a few more employees than your plan covers? Pay ₹{planAddons.overage_rate}/employee/month beyond your plan limit — no need to upgrade tiers.
+                    </p>
                   </div>
-                );
-              })
+                </div>
+                <div className={styles.addonNoteCard} style={{ borderColor: 'rgba(111,66,193,0.25)', background: 'linear-gradient(135deg,rgba(111,66,193,0.06),rgba(111,66,193,0.02))' }}>
+                  <span className={styles.addonNoteEmoji}>📝</span>
+                  <div>
+                    <strong className={styles.addonNoteTitle}>Editable DOCX Appointment Letters</strong>
+                    <span className={styles.addonNotePrice}> — ₹{planAddons.docx_addon_price}/month, any plan</span>
+                    <p className={styles.addonNoteDesc}>
+                      Get fully editable DOCX appointment letters in addition to PDF. Available as an add-on on any plan.
+                    </p>
+                  </div>
+                </div>
+              </div>
             )}
           </div>
 
-          {/* FAQ Accordion Accordion */}
+          {/* RIGHT COLUMN: FAQ */}
           <div className={styles.faqContainer}>
             <h3 className={styles.faqMainTitle}>Frequently Asked Questions</h3>
             <div className={styles.faqList}>

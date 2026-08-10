@@ -3,8 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useSeo } from './hooks/useSeo';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import * as XLSX from 'xlsx';
-import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History, ChevronDown, ChevronRight, Wallet, Settings } from 'lucide-react';
+import * as XLSX from 'xlsx';import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History, ChevronDown, ChevronRight, Wallet, Settings, ShieldCheck } from 'lucide-react';
 
 import UploadZone from './components/UploadZone';
 import ValidationErrors from './components/ValidationErrors';
@@ -109,6 +108,7 @@ function MainApp({ theme, setTheme }) {
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
   const [credits, setCredits] = useState(0);
   const [wageCredits, setWageCredits] = useState(0);
+  const [subStatus, setSubStatus] = useState(null);
 
   const refreshCredits = useCallback(() => {
     if (user) {
@@ -118,6 +118,10 @@ function MainApp({ theme, setTheme }) {
           setWageCredits(res.remaining_wage_copies || 0);
         })
         .catch(err => console.error("Failed to load credits:", err));
+
+      billingApi.getSubscriptionStatus()
+        .then(res => setSubStatus(res))
+        .catch(err => console.error("Failed to load subscription:", err));
     }
   }, [user]);
 
@@ -521,15 +525,19 @@ function MainApp({ theme, setTheme }) {
               <User size={14} style={{ flexShrink: 0 }} />
               <span className={styles.sidebarUserEmail} style={{ fontSize: '12px' }}>{user?.email || 'User'}</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontWeight: 'bold', color: 'var(--color-primary)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Wallet size={12} />
-                <span>{credits} offer copies left</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: '11px', fontWeight: 'bold', width: '100%' }}>
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: '6px',
+                color: subStatus?.is_active ? '#10b981' : '#dc3545'
+              }}>
+                <ShieldCheck size={14} style={{ flexShrink: 0 }} />
+                <span>{subStatus?.is_active ? `${subStatus.plan_name} Plan` : 'No Active Plan'}</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <Wallet size={12} />
-                <span>{wageCredits} wage copies left</span>
-              </div>
+              {subStatus?.is_active && (
+                <div style={{ fontSize: '10px', color: 'var(--color-text-secondary)', fontWeight: 400, paddingLeft: '20px' }}>
+                  {subStatus.days_remaining} days remaining
+                </div>
+              )}
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
