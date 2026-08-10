@@ -196,6 +196,10 @@ export const billingApi = {
     request(`/api/v1/billing/plans/${id}`, { method: 'PUT', body: JSON.stringify(data) }, false),
   deletePlan: (id) =>
     request(`/api/v1/billing/plans/${id}`, { method: 'DELETE' }, false),
+  getPlanAddons: () =>
+    request('/api/v1/billing/plan-addons', { method: 'GET' }, false),
+  getSubscriptionStatus: () =>
+    request('/api/v1/billing/subscription', { method: 'GET' }, false),
 };
 
 export const wagesApi = {

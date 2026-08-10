@@ -11,6 +11,8 @@ export default function AdminPanel() {
     tier1_threshold: 500,
     tier1_copies: 20,
     base_rate: 30,
+    overage_rate: 15,
+    docx_addon_price: 299,
   });
 
   const [plans, setPlans] = useState([]);
@@ -36,6 +38,8 @@ export default function AdminPanel() {
         tier1_threshold: configData.tier1_threshold,
         tier1_copies: configData.tier1_copies,
         base_rate: configData.base_rate,
+        overage_rate: configData.overage_rate ?? 15,
+        docx_addon_price: configData.docx_addon_price ?? 299,
       });
 
       const plansData = await billingApi.getPlans(false);
@@ -67,6 +71,8 @@ export default function AdminPanel() {
         tier1_threshold: parseFloat(formData.tier1_threshold),
         tier1_copies: parseInt(formData.tier1_copies, 10),
         base_rate: parseFloat(formData.base_rate),
+        overage_rate: parseFloat(formData.overage_rate),
+        docx_addon_price: parseFloat(formData.docx_addon_price),
       });
       setFormData({
         tier2_threshold: res.tier2_threshold,
@@ -74,6 +80,8 @@ export default function AdminPanel() {
         tier1_threshold: res.tier1_threshold,
         tier1_copies: res.tier1_copies,
         base_rate: res.base_rate,
+        overage_rate: res.overage_rate ?? 15,
+        docx_addon_price: res.docx_addon_price ?? 299,
       });
       setStatus({ type: 'success', message: 'Billing quota configuration updated successfully.' });
     } catch (err) {
@@ -362,6 +370,46 @@ export default function AdminPanel() {
                   className={styles.input}
                   disabled={saving}
                   min="1"
+                />
+              </div>
+            </div>
+
+            <div style={{ gridColumn: 'span 2' }}><hr style={{ border: 'none', borderTop: '1px solid var(--color-gray-200)' }} /></div>
+
+            {/* Overage Rate */}
+            <div className={styles.field}>
+              <label className={styles.label}>Overage Rate (₹ per employee per month beyond plan limit)</label>
+              <div className={styles.inputWrap}>
+                <span className={styles.inputIcon}><IndianRupee size={16} /></span>
+                <input
+                  type="number"
+                  name="overage_rate"
+                  value={formData.overage_rate}
+                  onChange={handleConfigChange}
+                  placeholder="15"
+                  className={styles.input}
+                  disabled={saving}
+                  min="0"
+                  step="0.5"
+                />
+              </div>
+            </div>
+
+            {/* DOCX Add-on Price */}
+            <div className={styles.field}>
+              <label className={styles.label}>DOCX Appointment Letters Add-on Price (₹ per month)</label>
+              <div className={styles.inputWrap}>
+                <span className={styles.inputIcon}><IndianRupee size={16} /></span>
+                <input
+                  type="number"
+                  name="docx_addon_price"
+                  value={formData.docx_addon_price}
+                  onChange={handleConfigChange}
+                  placeholder="299"
+                  className={styles.input}
+                  disabled={saving}
+                  min="0"
+                  step="1"
                 />
               </div>
             </div>
