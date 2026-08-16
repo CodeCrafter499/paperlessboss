@@ -42,34 +42,15 @@ function LetterheadUpload({ active }) {
     }
   }, [selectedPreviewId]);
 
-  // Fetch specific PDF blob and convert to Object URL
+  // Set authenticated PDF direct URL for secure iframe compatibility in production
   const fetchPdf = useCallback(async (id) => {
     if (!id) {
       setPdfUrl('');
       return;
     }
-    setLoadingPdf(true);
-    try {
-      const response = await fetch(`${BASE_API}/api/v1/profile/company/letterheads/${id}/pdf`, {
-        headers: {
-          Authorization: `Bearer ${tokenStore.get()}`
-        }
-      });
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
-        setPdfUrl((prev) => {
-          if (prev) URL.revokeObjectURL(prev);
-          return url;
-        });
-      } else {
-        console.error('Failed to fetch letterhead PDF');
-      }
-    } catch (err) {
-      console.error('Error fetching letterhead PDF:', err);
-    } finally {
-      setLoadingPdf(false);
-    }
+    const token = tokenStore.get();
+    const url = `${BASE_API}/api/v1/profile/company/letterheads/${id}/pdf?token=${encodeURIComponent(token)}`;
+    setPdfUrl(url);
   }, []);
 
   // Verify prerequisites: user must have completed Company profile
