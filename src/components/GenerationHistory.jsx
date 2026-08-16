@@ -16,7 +16,7 @@ import { offerLetterApi, wagesApi } from '../utils/authApi';
 import { saveAs } from 'file-saver';
 import styles from './GenerationHistory.module.css';
 
-function GenerationHistory({ active }) {
+function GenerationHistory({ active, hasDocxAddon = false }) {
   const [historyType, setHistoryType] = useState('offer_letter'); // 'offer_letter' or 'wage_slip'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -177,7 +177,7 @@ function GenerationHistory({ active }) {
               <Users size={22} />
             </div>
             <div className={styles.statInfo}>
-              <div className={styles.statLabel}>Unique Employees (by LIN)</div>
+              <div className={styles.statLabel}>Unique Employees (by UAN)</div>
               <div className={styles.statValue}>{historyData.unique_employees_count || 0}</div>
             </div>
           </div>
@@ -336,7 +336,7 @@ function GenerationHistory({ active }) {
                                 <span>PDF</span>
                               </button>
                             )}
-                            {(log.format === 'docx' || log.format === 'both') && (
+                            {(log.format === 'docx' || log.format === 'both') && hasDocxAddon && (
                               <button 
                                 onClick={() => handleDownloadFile(log.employee_id, 'docx')}
                                 className={`${styles.actionDlBtn} ${styles.docxAction}`}

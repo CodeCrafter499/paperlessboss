@@ -19,84 +19,7 @@ function LetterheadUpload({ active }) {
   const [pdfUrl, setPdfUrl] = useState('');
   const [loadingPdf, setLoadingPdf] = useState(false);
 
-  const canvasRef = useRef(null);
 
-  useEffect(() => {
-    if (!pdfUrl) return;
-
-    let isMounted = true;
-    let script = document.getElementById('pdfjs-script');
-    
-    const renderPdf = (pdfjsLib) => {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.worker.min.js';
-      
-      pdfjsLib.getDocument(pdfUrl).promise.then(pdf => {
-        if (!isMounted) return;
-        pdf.getPage(1).then(page => {
-          if (!isMounted) return;
-          const canvas = canvasRef.current;
-          if (!canvas) return;
-          const context = canvas.getContext('2d');
-          
-          const viewport = page.getViewport({ scale: 1.0 });
-          // Target fixed dimensions matching the 750px height preview frame
-          const containerWidth = 520;
-          const containerHeight = 730;
-          
-          const scaleX = containerWidth / viewport.width;
-          const scaleY = containerHeight / viewport.height;
-          const scale = Math.min(scaleX, scaleY);
-          
-          const scaledViewport = page.getViewport({ scale: scale * 1.5 }); // Render at 1.5x resolution for crispness
-          
-          canvas.width = scaledViewport.width;
-          canvas.height = scaledViewport.height;
-          
-          // CSS scale fits the high-dpi canvas to the container (overridden by max-width/max-height for responsiveness)
-          canvas.style.width = `${scaledViewport.width / 1.5}px`;
-          canvas.style.height = `${scaledViewport.height / 1.5}px`;
-          
-          const renderContext = {
-            canvasContext: context,
-            viewport: scaledViewport
-          };
-          page.render(renderContext);
-        });
-      }).catch(err => {
-        console.error('Error rendering PDF via pdf.js:', err);
-      });
-    };
-
-    if (!script) {
-      script = document.createElement('script');
-      script.id = 'pdfjs-script';
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
-      script.onload = () => {
-        if (isMounted) {
-          const pdfjsLib = window['pdfjs-dist/build/pdf'];
-          renderPdf(pdfjsLib);
-        }
-      };
-      document.body.appendChild(script);
-    } else {
-      if (window['pdfjs-dist/build/pdf']) {
-        renderPdf(window['pdfjs-dist/build/pdf']);
-      } else {
-        const oldOnload = script.onload;
-        script.onload = () => {
-          if (oldOnload) oldOnload();
-          if (isMounted) {
-            const pdfjsLib = window['pdfjs-dist/build/pdf'];
-            renderPdf(pdfjsLib);
-          }
-        };
-      }
-    }
-
-    return () => {
-      isMounted = false;
-    };
-  }, [pdfUrl]);
 
   // Fetch list of letterhead versions
   const fetchVersions = useCallback(async (autoSelectActive = false) => {
@@ -278,9 +201,6 @@ function LetterheadUpload({ active }) {
           <div className={styles.card} style={{ margin: 0, maxWidth: '100%' }}>
             <div className={styles.cardHeader}>
               <h2 className={styles.title}>Company Letterhead Template</h2>
-              <p className={styles.subtitle}>
-                Upload a PDF letterhead template. The backend will overlay appointment details on top of the active template when generating letters.
-              </p>
             </div>
 
             {status.message && (
@@ -440,7 +360,7 @@ function LetterheadUpload({ active }) {
           </div>
 
           {/* Right panel: Live Preview */}
-          <div className={styles.card} style={{ margin: 0, maxWidth: '100%', minHeight: '820px', display: 'flex', flexDirection: 'column' }}>
+          <div className={styles.card} style={{ margin: 0, width: '100%', maxWidth: '560px', minHeight: '820px', display: 'flex', flexDirection: 'column' }}>
             <div className={styles.cardHeader} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
               <div>
                 <h2 className={styles.title} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -454,7 +374,7 @@ function LetterheadUpload({ active }) {
                 <p className={styles.subtitle}>
                   {previewedVersion 
                     ? `${previewedVersion.filename} (${previewedVersion.is_active ? 'Currently Active' : 'Inactive Version'})`
-                    : 'Showing local default/fallback letterhead template.'}
+                    : 'Plain Text Layout (Default)'}
                 </p>
               </div>
 
@@ -483,18 +403,20 @@ function LetterheadUpload({ active }) {
               )}
             </div>
             
-            <div style={{ flex: 1, position: 'relative', width: '100%', height: '750px', background: '#1e1e1e', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-gray-200)' }}>
+            <div style={{ flex: 1, position: 'relative', width: '100%', height: '750px', background: '#f8fafc', borderRadius: 'var(--radius-md)', overflow: 'hidden', border: '1px solid var(--color-gray-200)', display: 'flex', justifyContent: 'center' }}>
               {loadingPdf ? (
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                   <Loader2 className={styles.loadingSpinner} style={{ width: 24, height: 24, borderTopColor: 'var(--color-primary)' }} />
                 </div>
               ) : pdfUrl ? (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', width: '100%', padding: '10px', boxSizing: 'border-box' }}>
-                  <canvas ref={canvasRef} style={{ maxWidth: '100%', maxHeight: '100%', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '4px', backgroundColor: '#fff' }} />
-                </div>
+                <iframe src={`${pdfUrl}#toolbar=0&navpanes=0&view=FitH`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', background: '#fff' }} title="Letterhead Preview" />
               ) : (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--color-gray-400)' }}>
-                  <span>No letterhead template selected for preview</span>
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--color-gray-400)', background: '#fff', padding: '24px', textAlign: 'center' }}>
+                  <FileText size={48} style={{ color: 'var(--color-primary)', marginBottom: '16px' }} />
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>Plain Text Template (Default)</h3>
+                  <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '320px', lineHeight: 1.5 }}>
+                    No custom PDF letterhead template uploaded yet. Appointment letters will be generated on a clean, plain white page with company details at the top.
+                  </p>
                 </div>
               )}
             </div>

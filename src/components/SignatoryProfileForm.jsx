@@ -114,8 +114,29 @@ function SignatoryProfileForm() {
       }
     }
 
+    if (includeSignatureStamp) {
+      if (!signatureImg) {
+        newErrors.signature = 'Signature image is required.';
+      }
+      if (!stampImg) {
+        newErrors.stamp = 'Company stamp image is required.';
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const handleToggleSignatureStamp = (val) => {
+    setIncludeSignatureStamp(val);
+    if (!val) {
+      setErrors(prev => {
+        const copy = { ...prev };
+        delete copy.signature;
+        delete copy.stamp;
+        return copy;
+      });
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -301,7 +322,7 @@ function SignatoryProfileForm() {
                   type="radio" 
                   name="signature_stamp_toggle" 
                   checked={includeSignatureStamp} 
-                  onChange={() => setIncludeSignatureStamp(true)} 
+                  onChange={() => handleToggleSignatureStamp(true)} 
                 />
                 With Signature and Stamp
               </label>
@@ -310,7 +331,7 @@ function SignatoryProfileForm() {
                   type="radio" 
                   name="signature_stamp_toggle" 
                   checked={!includeSignatureStamp} 
-                  onChange={() => setIncludeSignatureStamp(false)} 
+                  onChange={() => handleToggleSignatureStamp(false)} 
                 />
                 Without Signature and Stamp
               </label>
@@ -320,7 +341,10 @@ function SignatoryProfileForm() {
               <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
                 {/* Signature Upload */}
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Authorised Signature (PNG/JPEG) (Optional)</label>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>
+                    <span>Authorised Signature (PNG/JPEG)</span>
+                    <span className={styles.required}>*</span>
+                  </label>
                   <input 
                     type="file" 
                     accept="image/*" 
@@ -328,12 +352,16 @@ function SignatoryProfileForm() {
                       const file = e.target.files[0];
                       if (file) {
                         const reader = new FileReader();
-                        reader.onloadend = () => setSignatureImg(reader.result);
+                        reader.onloadend = () => {
+                          setSignatureImg(reader.result);
+                          setErrors(prev => ({ ...prev, signature: '' }));
+                        };
                         reader.readAsDataURL(file);
                       }
                     }} 
                     style={{ fontSize: '12px', width: '100%' }}
                   />
+                  {errors.signature && <span className={styles.errorMsg} style={{ display: 'block', marginTop: '4px' }}><AlertCircle size={12} /> {errors.signature}</span>}
                   {signatureImg && (
                     <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', background: '#fff', width: 'fit-content' }}>
                       <img src={signatureImg} alt="Signature Preview" style={{ maxHeight: '40px', maxWidth: '120px', objectFit: 'contain' }} />
@@ -343,7 +371,10 @@ function SignatoryProfileForm() {
 
                 {/* Stamp Upload */}
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>Company Stamp (PNG/JPEG) (Optional)</label>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>
+                    <span>Company Stamp (PNG/JPEG)</span>
+                    <span className={styles.required}>*</span>
+                  </label>
                   <input 
                     type="file" 
                     accept="image/*" 
@@ -351,12 +382,16 @@ function SignatoryProfileForm() {
                       const file = e.target.files[0];
                       if (file) {
                         const reader = new FileReader();
-                        reader.onloadend = () => setStampImg(reader.result);
+                        reader.onloadend = () => {
+                          setStampImg(reader.result);
+                          setErrors(prev => ({ ...prev, stamp: '' }));
+                        };
                         reader.readAsDataURL(file);
                       }
                     }} 
                     style={{ fontSize: '12px', width: '100%' }}
                   />
+                  {errors.stamp && <span className={styles.errorMsg} style={{ display: 'block', marginTop: '4px' }}><AlertCircle size={12} /> {errors.stamp}</span>}
                   {stampImg && (
                     <div style={{ marginTop: '8px', border: '1px solid #cbd5e1', padding: '6px', borderRadius: '4px', background: '#fff', width: 'fit-content' }}>
                       <img src={stampImg} alt="Stamp Preview" style={{ maxHeight: '40px', maxWidth: '100px', objectFit: 'contain' }} />

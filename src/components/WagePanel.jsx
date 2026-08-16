@@ -91,7 +91,7 @@ export default function WagePanel() {
       const { rows: parsed } = await parseWageExcelFile(file);
       setRows(parsed);
 
-      const result = await wagesApi.validateExcel(file);
+      const result = await wagesApi.validateExcel(file, false);
       setValidationResult(result);
 
       if (!result.success) {
@@ -164,7 +164,7 @@ export default function WagePanel() {
       const fileBlob = new Blob([excelBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const file = new File([fileBlob], filename || 'edited_wages.xlsx', { type: fileBlob.type });
 
-      const result = await wagesApi.validateExcel(file);
+      const result = await wagesApi.validateExcel(file, true);
       setValidationResult(result);
       setRows(updatedRows);
 

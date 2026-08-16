@@ -70,7 +70,7 @@ export default function UploadZone({ onFileParsed, isParsing, isValidating, erro
         </h3>
         <p className={styles.subtitle}>
           {isValidating
-            ? 'Checking employee records against statutory requirements…'
+            ? 'Checking employee records…'
             : isParsing
               ? 'Please wait while we parse the employee data'
               : 'Drag & drop your .xlsx file here, or click to browse'}

@@ -15,7 +15,8 @@ export default function GeneratePanel({
   format, 
   onFormatChange, 
   onGenerate, 
-  validationPassed
+  validationPassed,
+  hasDocxAddon = false
 }) {
   const pct = total > 0 ? Math.round((progress / total) * 100) : 0;
 
@@ -51,7 +52,7 @@ export default function GeneratePanel({
           <div className={styles.formatRow}>
             <span className={styles.formatLabel}><FileType size={13} /> Output format:</span>
             <div className={styles.formatGroup}>
-              {FORMAT_OPTIONS.map(opt => (
+              {FORMAT_OPTIONS.filter(opt => hasDocxAddon || opt.value === 'pdf').map(opt => (
                 <button
                    key={opt.value}
                    className={`${styles.formatBtn} ${format === opt.value ? styles.formatActive : ''}`}
@@ -63,6 +64,11 @@ export default function GeneratePanel({
               ))}
             </div>
           </div>
+          {!hasDocxAddon && (
+            <p style={{ fontSize: '11px', color: '#8a99ad', margin: '4px 0 0 0', fontStyle: 'italic' }}>
+              💡 To enable Word (.docx) generation, please subscribe to the DOCX Add-on plan.
+            </p>
+          )}
         </div>
       )}
     </div>

@@ -166,20 +166,16 @@ export const offerLetterApi = {
     request('/api/v1/offer-letters/generation-history', { method: 'GET' }, false),
 };
 
-export async function validateExcelApi(file) {
+export async function validateExcelApi(file, checkLimits = false) {
   const formData = new FormData();
   formData.append('file', file);
-  return request('/validate-excel', {
+  return request(`/validate-excel?check_limits=${checkLimits}`, {
     method: 'POST',
     body: formData,
   }, false);
 }
 
 export const billingApi = {
-  getBalance: () =>
-    request('/api/v1/billing/balance', { method: 'GET' }, false),
-  pay: (amount, type) =>
-    request('/api/v1/billing/pay', { method: 'POST', body: JSON.stringify({ amount, type }) }, false),
   initiatePhonePe: (amount, type) =>
     request('/api/v1/billing/phonepe/initiate', { method: 'POST', body: JSON.stringify({ amount, type }) }, false),
   getPhonePeStatus: (merchantTransactionId) =>
@@ -203,10 +199,10 @@ export const billingApi = {
 };
 
 export const wagesApi = {
-  validateExcel: (file) => {
+  validateExcel: (file, checkLimits = false) => {
     const formData = new FormData();
     formData.append('file', file);
-    return request('/api/v1/wages/validate-excel', {
+    return request(`/api/v1/wages/validate-excel?check_limits=${checkLimits}`, {
       method: 'POST',
       body: formData,
     }, false);

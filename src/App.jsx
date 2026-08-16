@@ -106,28 +106,24 @@ function MainApp({ theme, setTheme }) {
   // Settings / Integration States
   const [activeTab, setActiveTab]     = useState('generator'); // 'generator', 'company_profile', 'company_signatory', 'company_letterhead', 'history'
   const [isCompanyDropdownOpen, setIsCompanyDropdownOpen] = useState(false);
-  const [credits, setCredits] = useState(0);
-  const [wageCredits, setWageCredits] = useState(0);
   const [subStatus, setSubStatus] = useState(null);
 
-  const refreshCredits = useCallback(() => {
+  const refreshSubscription = useCallback(() => {
     if (user) {
-      billingApi.getBalance()
-        .then(res => {
-          setCredits(res.remaining_copies || 0);
-          setWageCredits(res.remaining_wage_copies || 0);
-        })
-        .catch(err => console.error("Failed to load credits:", err));
-
       billingApi.getSubscriptionStatus()
-        .then(res => setSubStatus(res))
+        .then(res => {
+          setSubStatus(res);
+          if (res && !res.is_docx_active) {
+            setFormat('pdf');
+          }
+        })
         .catch(err => console.error("Failed to load subscription:", err));
     }
   }, [user]);
 
   useEffect(() => {
-    refreshCredits();
-  }, [user, refreshCredits]);
+    refreshSubscription();
+  }, [user, refreshSubscription]);
 
   useEffect(() => {
     if (user && activeTab === 'generator') {
@@ -211,7 +207,7 @@ function MainApp({ theme, setTheme }) {
       setWarnings(warns);
 
       // Step 2: Server-side validation via /validate-excel API
-      const result = await validateExcelApi(file);
+      const result = await validateExcelApi(file, false);
       const normalizedResult = result.validation_result || result;
       setValidationResult(normalizedResult);
 
@@ -261,7 +257,7 @@ function MainApp({ theme, setTheme }) {
       const file = new File([fileBlob], filename || 'edited_employees.xlsx', { type: fileBlob.type });
 
       // Run server-side validation on edited file
-      const result = await validateExcelApi(file);
+      const result = await validateExcelApi(file, true);
       const normalizedResult = result.validation_result || result;
       setValidationResult(normalizedResult);
 
@@ -291,6 +287,7 @@ function MainApp({ theme, setTheme }) {
   }, []);
 
   const handleGenerate = useCallback(async () => {
+    setParseError('');
     setState('generating');
     setGenProgress(0);
 
@@ -310,6 +307,13 @@ function MainApp({ theme, setTheme }) {
           const readyCount = activeEmployees.filter(emp => emp.ready).length;
           setGenProgress(readyCount);
 
+          if (statusRes.error) {
+            clearInterval(pollInterval);
+            setParseError(statusRes.error);
+            setState('previewing');
+            return;
+          }
+
           if (readyCount === rows.length) {
             clearInterval(pollInterval);
             const mappedFiles = activeEmployees.map(emp => ({
@@ -325,7 +329,7 @@ function MainApp({ theme, setTheme }) {
             }));
             setGeneratedFiles(mappedFiles);
             setState('done');
-            refreshCredits();
+            refreshSubscription();
           }
         } catch (pollErr) {
           console.error('Error polling offer letters status:', pollErr);
@@ -338,7 +342,7 @@ function MainApp({ theme, setTheme }) {
       setParseError(err.message || 'Failed to trigger server-side offer letter generation. Check profiles.');
       setState('previewing');
     }
-  }, [rows, selectedLetterheadId, refreshCredits]);
+  }, [rows, selectedLetterheadId, refreshSubscription]);
 
   const handleDownloadOne = useCallback(async (index, type) => {
     const f = generatedFiles[index];
@@ -505,7 +509,7 @@ function MainApp({ theme, setTheme }) {
             onClick={() => setActiveTab('billing')}
           >
             <Wallet size={16} />
-            <span>Billing & Credits</span>
+             <span>Billing & Subscription</span>
           </button>
           {user?.email === 'admin@peperlessboss.com' && (
             <button 
@@ -582,10 +586,10 @@ function MainApp({ theme, setTheme }) {
               <LetterheadUpload active={activeTab === 'company_letterhead'} />
             </div>
             <div style={{ display: activeTab === 'history' ? 'block' : 'none' }}>
-              <GenerationHistory active={activeTab === 'history'} />
+              <GenerationHistory active={activeTab === 'history'} hasDocxAddon={subStatus?.is_docx_active} />
             </div>
             <div style={{ display: activeTab === 'billing' ? 'block' : 'none' }}>
-              <BillingTab credits={credits} wageCredits={wageCredits} refreshCredits={refreshCredits} />
+               <BillingTab />
             </div>
             {user?.email === 'admin@peperlessboss.com' && (
               <div style={{ display: activeTab === 'admin_panel' ? 'block' : 'none' }}>
@@ -684,6 +688,24 @@ function MainApp({ theme, setTheme }) {
               {/* Validation passed — show preview + generate panel */}
               {(state === 'previewing' || state === 'generating') && (
                 <>
+                  {parseError && (
+                    <div style={{
+                      padding: '1rem',
+                      backgroundColor: '#fde8e8',
+                      border: '1px solid #f8b4b4',
+                      borderRadius: '6px',
+                      color: '#c53030',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}>
+                      <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                      <span>{parseError}</span>
+                    </div>
+                  )}
                   {validationResult && validationResult.success && (
                     <div style={{
                       padding: '1rem',
@@ -711,7 +733,22 @@ function MainApp({ theme, setTheme }) {
                     onRevalidate={handleRevalidate} 
                     isGenerating={state === 'generating'} 
                   />
-                  {letterheads.length > 0 && (
+                  {letterheads.length === 0 ? (
+                    <div style={{
+                      padding: '12px 16px',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px dashed var(--color-gray-200)',
+                      borderRadius: 'var(--radius-md)',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '13px',
+                      color: 'var(--color-gray-400)'
+                    }}>
+                      <span>ℹ️ <strong>No custom letterhead template found.</strong> Please upload a custom template under Company Setup, or the system will fall back to a basic plain layout.</span>
+                    </div>
+                  ) : (
                     <div className={styles.letterheadSelectorCard}>
                       <div className={styles.letterheadSelectorTitle}>
                         <span>Select Letterhead Template for Generation</span>
@@ -736,6 +773,7 @@ function MainApp({ theme, setTheme }) {
                     isGenerating={state === 'generating'}
                     format={format} onFormatChange={setFormat} onGenerate={handleGenerate}
                     validationPassed={true}
+                    hasDocxAddon={subStatus?.is_docx_active}
                   />
                 </>
               )}
@@ -764,10 +802,6 @@ function MainApp({ theme, setTheme }) {
             </div>
           </div>
         </main>
-
-        <footer className={styles.footer}>
-          <p>© PaperlessBoss · PaperlessBoss Private Limited &nbsp;|&nbsp; Code on Wages, 2019 &amp; Code on Social Security, 2020</p>
-        </footer>
       </div>
     </div>
   );
