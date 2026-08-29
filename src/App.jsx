@@ -293,6 +293,7 @@ function MainApp({ theme, setTheme }) {
   const handleGenerate = useCallback(async () => {
     setState('generating');
     setGenProgress(0);
+    setParseError('');
 
     try {
       await offerLetterApi.generateServer(selectedLetterheadId);
@@ -301,6 +302,13 @@ function MainApp({ theme, setTheme }) {
       const pollInterval = setInterval(async () => {
         try {
           const statusRes = await offerLetterApi.getStatus();
+          
+          if (statusRes.status === 'failed') {
+            clearInterval(pollInterval);
+            setParseError(statusRes.error || 'Offer letter generation failed.');
+            setState('previewing');
+            return;
+          }
           
           // Map progress specifically to the uploaded batch rows rather than whole company history
           const activeEmployees = statusRes.employees.filter(emp => 
@@ -356,17 +364,26 @@ function MainApp({ theme, setTheme }) {
     const folder = zip.folder('Appointment_Letters');
 
     try {
+      const downloadTasks = [];
+
       for (let i = 0; i < generatedFiles.length; i++) {
         const f = generatedFiles[i];
         if (type !== 'pdf') {
-          const docxBlob = await offerLetterApi.downloadFile(f.id, 'docx');
-          folder.file(f.docxFilename, docxBlob);
+          downloadTasks.push((async () => {
+            const docxBlob = await offerLetterApi.downloadFile(f.id, 'docx');
+            folder.file(f.docxFilename, docxBlob);
+          })());
         }
         if (type !== 'docx') {
-          const pdfBlob = await offerLetterApi.downloadFile(f.id, 'pdf');
-          folder.file(f.pdfFilename, pdfBlob);
+          downloadTasks.push((async () => {
+            const pdfBlob = await offerLetterApi.downloadFile(f.id, 'pdf');
+            folder.file(f.pdfFilename, pdfBlob);
+          })());
         }
       }
+
+      await Promise.all(downloadTasks);
+
       const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
       saveAs(zipBlob, `Appointment_Letters_${type === 'both' ? 'All' : type.toUpperCase()}.zip`);
     } catch (err) {
@@ -684,6 +701,24 @@ function MainApp({ theme, setTheme }) {
               {/* Validation passed — show preview + generate panel */}
               {(state === 'previewing' || state === 'generating') && (
                 <>
+                  {parseError && (
+                    <div style={{
+                      padding: '1rem',
+                      backgroundColor: '#fde8e8',
+                      border: '1px solid #f8b4b4',
+                      borderRadius: '6px',
+                      color: '#c53030',
+                      marginBottom: '1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                      fontSize: '0.9rem',
+                      fontWeight: '500'
+                    }}>
+                      <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                      <span>{parseError}</span>
+                    </div>
+                  )}
                   {validationResult && validationResult.success && (
                     <div style={{
                       padding: '1rem',
@@ -765,9 +800,6 @@ function MainApp({ theme, setTheme }) {
           </div>
         </main>
 
-        <footer className={styles.footer}>
-          <p>© PaperlessBoss · PaperlessBoss Private Limited &nbsp;|&nbsp; Code on Wages, 2019 &amp; Code on Social Security, 2020</p>
-        </footer>
       </div>
     </div>
   );

@@ -73,20 +73,21 @@ function LetterheadUpload({ active }) {
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.4.120/pdf.min.js';
       script.onload = () => {
         if (isMounted) {
-          const pdfjsLib = window['pdfjs-dist/build/pdf'];
+          const pdfjsLib = window['pdfjsLib'] || window['pdfjs-dist/build/pdf'];
           renderPdf(pdfjsLib);
         }
       };
       document.body.appendChild(script);
     } else {
-      if (window['pdfjs-dist/build/pdf']) {
-        renderPdf(window['pdfjs-dist/build/pdf']);
+      const pdfjsLib = window['pdfjsLib'] || window['pdfjs-dist/build/pdf'];
+      if (pdfjsLib) {
+        renderPdf(pdfjsLib);
       } else {
         const oldOnload = script.onload;
         script.onload = () => {
           if (oldOnload) oldOnload();
           if (isMounted) {
-            const pdfjsLib = window['pdfjs-dist/build/pdf'];
+            const pdfjsLib = window['pdfjsLib'] || window['pdfjs-dist/build/pdf'];
             renderPdf(pdfjsLib);
           }
         };

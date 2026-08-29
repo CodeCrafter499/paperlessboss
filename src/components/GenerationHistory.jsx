@@ -76,7 +76,7 @@ function GenerationHistory({ active }) {
     const q = searchQuery.toLowerCase();
     return (
       log.employee_name.toLowerCase().includes(q) ||
-      (log.lin_number || '').toLowerCase().includes(q) ||
+      (log.uan_number || '').toLowerCase().includes(q) ||
       (log.designation || '').toLowerCase().includes(q)
     );
   });
@@ -174,10 +174,10 @@ function GenerationHistory({ active }) {
 
           <div className={styles.statCard}>
             <div className={`${styles.statIcon} ${styles.plumIcon}`}>
-              <Users size={22} />
+               <Users size={22} />
             </div>
             <div className={styles.statInfo}>
-              <div className={styles.statLabel}>Unique Employees (by LIN)</div>
+              <div className={styles.statLabel}>Unique Employees (by UAN)</div>
               <div className={styles.statValue}>{historyData.unique_employees_count || 0}</div>
             </div>
           </div>
@@ -212,7 +212,7 @@ function GenerationHistory({ active }) {
           <Search size={16} className={styles.searchIcon} />
           <input 
             type="text" 
-            placeholder={historyType === 'offer_letter' ? "Search by name, LIN, or designation..." : "Search by name, UAN, or designation..."}
+            placeholder={historyType === 'offer_letter' ? "Search by name, UAN, or designation..." : "Search by name, UAN, or designation..."}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className={styles.searchInput}
@@ -261,7 +261,7 @@ function GenerationHistory({ active }) {
               <thead>
                 <tr>
                   <th>Employee Details</th>
-                  <th>LIN Number</th>
+                  <th>UAN Number</th>
                   <th>Designation</th>
                   <th>Date of Joining</th>
                   <th>Format</th>
@@ -287,7 +287,7 @@ function GenerationHistory({ active }) {
                         </div>
                       </td>
                       <td>
-                        <span className={styles.linBadge}>{log.lin_number || '—'}</span>
+                        <span className={styles.linBadge}>{log.uan_number || '—'}</span>
                       </td>
                       <td>{log.designation || '—'}</td>
                       <td>
