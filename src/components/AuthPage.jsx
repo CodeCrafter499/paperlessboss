@@ -128,7 +128,7 @@ function RegisterScreen({ onBack, onRegistered }) {
     e.preventDefault();
     setError('');
     if (!email || !password || !confirm || !mobileNo) { setError('Please fill in all fields.'); return; }
-    if (mobileNo.length < 10) { setError('Mobile number must be at least 10 digits.'); return; }
+    if (!/^\d{10}$/.test(mobileNo)) { setError('Mobile number must be exactly 10 digits.'); return; }
     if (password !== confirm) { setError('Passwords do not match.'); return; }
     if (password.length < 8) { setError('Password must be at least 8 characters.'); return; }
     if (!agreed) { setError('You must agree to the Terms and Conditions and Privacy Policy to register.'); return; }
@@ -150,7 +150,7 @@ function RegisterScreen({ onBack, onRegistered }) {
         </Field>
         <Field label="Mobile number" icon={<Phone size={15} />}>
           <input type="tel" placeholder="e.g. 9876543210" value={mobileNo}
-            onChange={(e) => setMobileNo(e.target.value)} className={styles.input} disabled={loading} />
+            onChange={(e) => setMobileNo(e.target.value.replace(/\D/g, '').slice(0, 10))} className={styles.input} disabled={loading} />
         </Field>
         <Field label="Password" icon={<Lock size={15} />}>
           <input type={showPw ? 'text' : 'password'} placeholder="Minimum 8 characters" value={password}
