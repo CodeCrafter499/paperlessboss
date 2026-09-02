@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Download, RefreshCw, CheckCircle2, FileText, Loader2, Plus
+  Download, RefreshCw, CheckCircle2, FileText, Loader2, Plus, FileDown
 } from 'lucide-react';
 import { wagesApi } from '../utils/authApi';
 import { saveAs } from 'file-saver';
@@ -8,8 +8,8 @@ import * as XLSX from 'xlsx';
 import ExcelEditor from './ExcelEditor';
 import UploadZone from './UploadZone';
 import ValidationErrors from './ValidationErrors';
-import { WAGE_COLUMN_MAP, parseWageExcelFile } from '../utils/excelParser';
-import styles from '../App.module.css'; // Use the main App styles for exact visual parity!
+import { WAGE_COLUMN_MAP, parseWageExcelFile, downloadWageTemplate } from '../utils/excelParser';
+import styles from '../App.module.css';
 
 const WAGE_COLS = [
   { key: 'employeeName',            label: 'Employee Name' },
@@ -219,13 +219,36 @@ export default function WagePanel() {
       {state === 'idle' && (
         <>
           <div className={styles.selectionGrid}>
+            {/* Card 1: Upload Existing Excel */}
             <UploadZone
               onFileParsed={handleFile}
               isParsing={false}
               isValidating={false}
               error={parseError}
             />
+
+            {/* Card 2: Download Pre-Formatted Wage Template */}
+            <div 
+              className={styles.templateCard}
+              onClick={downloadWageTemplate}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => e.key === 'Enter' && downloadWageTemplate()}
+            >
+              <div className={styles.templateIconWrap}>
+                <FileDown size={28} />
+              </div>
+              <h3 className={styles.templateTitle}>Download Excel Format</h3>
+              <p className={styles.templateText}>
+                Download the pre-formatted Form V wage Excel template with sample records and statutory columns.
+              </p>
+              <button type="button" className={styles.templateAction}>
+                <Download size={14} />
+                <span>Download Format (.xlsx)</span>
+              </button>
+            </div>
             
+            {/* Card 3: Start with Blank Sheet */}
             <div 
               className={styles.blankCard}
               onClick={handleCreateBlank}
@@ -251,10 +274,21 @@ export default function WagePanel() {
           <div className={styles.helpCard}>
             <h3 className={styles.helpTitle}>How it works</h3>
             <ol className={styles.helpList}>
-              <li><strong>Prepare your Excel file</strong> — Use the provided template with all required wage columns.</li>
+              <li>
+                <strong>Prepare your Excel file</strong> — Use the official format with all required Form V wage columns.
+                <button 
+                  type="button" 
+                  onClick={downloadWageTemplate}
+                  className={styles.inlineTemplateBtn}
+                  title="Download Sample Wage Excel Template"
+                >
+                  <Download size={12} />
+                  <span>Download Format (.xlsx)</span>
+                </button>
+              </li>
               <li><strong>Upload the file</strong> — Drag &amp; drop or click to browse. Preview data before generating.</li>
               <li><strong>Generate Wage Slips</strong> — Creates compliance Form V Wage Slips for each record.</li>
-              <li><strong>Download</strong> — Individual PDF files.</li>
+              <li><strong>Download</strong> — Individual PDF files or batch zip download.</li>
             </ol>
             <div className={styles.helpColumns}>
               <div>

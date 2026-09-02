@@ -14,12 +14,11 @@ function LetterheadUpload({ active }) {
   // Versioning state
   const [versions, setVersions] = useState([]);
   const [loadingVersions, setLoadingVersions] = useState(false);
-  const [selectedPreviewId, setSelectedPreviewId] = useState(null); // ID currently selected for preview
+  const [selectedPreviewId, setSelectedPreviewId] = useState(null);
   const [activatingId, setActivatingId] = useState(null);
   const [pdfUrl, setPdfUrl] = useState('');
+  const [pdfError, setPdfError] = useState('');
   const [loadingPdf, setLoadingPdf] = useState(false);
-
-
 
   // Fetch list of letterhead versions
   const fetchVersions = useCallback(async (autoSelectActive = false) => {
@@ -42,15 +41,34 @@ function LetterheadUpload({ active }) {
     }
   }, [selectedPreviewId]);
 
-  // Set authenticated PDF direct URL for secure iframe compatibility in production
+  // Fetch PDF blob directly for secure preview and graceful error display
   const fetchPdf = useCallback(async (id) => {
     if (!id) {
       setPdfUrl('');
+      setPdfError('');
       return;
     }
-    const token = tokenStore.get();
-    const url = `${BASE_API}/api/v1/profile/company/letterheads/${id}/pdf?token=${encodeURIComponent(token)}`;
-    setPdfUrl(url);
+    setLoadingPdf(true);
+    setPdfError('');
+    try {
+      const token = tokenStore.get();
+      const url = `${BASE_API}/api/v1/profile/company/letterheads/${id}/pdf?token=${encodeURIComponent(token)}`;
+      const res = await fetch(url);
+      if (!res.ok) {
+        setPdfUrl('');
+        setPdfError('This letterhead template file is missing or corrupted in storage. Please upload a new letterhead version.');
+        return;
+      }
+      const blob = await res.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      setPdfUrl(objectUrl);
+      setPdfError('');
+    } catch (err) {
+      setPdfUrl('');
+      setPdfError('Failed to load letterhead template file from storage.');
+    } finally {
+      setLoadingPdf(false);
+    }
   }, []);
 
   // Verify prerequisites: user must have completed Company profile
@@ -389,15 +407,67 @@ function LetterheadUpload({ active }) {
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
                   <Loader2 className={styles.loadingSpinner} style={{ width: 24, height: 24, borderTopColor: 'var(--color-primary)' }} />
                 </div>
+              ) : pdfError ? (
+                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', background: '#fff', padding: '32px', textAlign: 'center' }}>
+                  <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+                    <AlertCircle size={28} />
+                  </div>
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#991b1b', marginBottom: '8px' }}>
+                    Letterhead Template Not Found
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '340px', lineHeight: 1.6, marginBottom: '20px' }}>
+                    {pdfError}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 20px',
+                      background: 'var(--color-primary)',
+                      color: '#ffffff',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Upload size={14} />
+                    <span>Upload New Version</span>
+                  </button>
+                </div>
               ) : pdfUrl ? (
                 <iframe src={`${pdfUrl}#toolbar=0&navpanes=0&view=FitH`} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none', background: '#fff' }} title="Letterhead Preview" />
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', height: '100%', color: 'var(--color-gray-400)', background: '#fff', padding: '24px', textAlign: 'center' }}>
                   <FileText size={48} style={{ color: 'var(--color-primary)', marginBottom: '16px' }} />
-                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>Plain Text Template (Default)</h3>
-                  <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '320px', lineHeight: 1.5 }}>
-                    No custom PDF letterhead template uploaded yet. Appointment letters will be generated on a clean, plain white page with company details at the top.
+                  <h3 style={{ fontSize: '16px', fontWeight: 'bold', color: '#1e293b', marginBottom: '8px' }}>No Letterhead Uploaded Yet</h3>
+                  <p style={{ fontSize: '13px', color: '#64748b', maxWidth: '320px', lineHeight: 1.5, marginBottom: '16px' }}>
+                    Upload your company PDF letterhead on the left to activate and preview it here.
                   </p>
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 16px',
+                      background: 'var(--color-primary)',
+                      color: '#ffffff',
+                      borderRadius: '6px',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: '600',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Upload size={14} />
+                    <span>Upload Letterhead PDF</span>
+                  </button>
                 </div>
               )}
             </div>

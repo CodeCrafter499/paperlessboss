@@ -3,7 +3,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { useSeo } from './hooks/useSeo';
 import { saveAs } from 'file-saver';
 import JSZip from 'jszip';
-import * as XLSX from 'xlsx';import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History, ChevronDown, ChevronRight, Wallet, Settings, ShieldCheck } from 'lucide-react';
+import * as XLSX from 'xlsx';
+import { RefreshCw, LogOut, User, FileSpreadsheet, Building2, Plus, AlertTriangle, CheckCircle2, Sun, Moon, History, ChevronDown, ChevronRight, Wallet, Settings, ShieldCheck, FileDown, Download } from 'lucide-react';
 
 import UploadZone from './components/UploadZone';
 import ValidationErrors from './components/ValidationErrors';
@@ -27,7 +28,7 @@ import TermsPage from './components/TermsPage';
 import PrivacyPage from './components/PrivacyPage';
 import ScrollToHash from './components/ScrollToHash';
 
-import { parseExcelFile, validateRows, COLUMN_MAP } from './utils/excelParser';
+import { parseExcelFile, validateRows, COLUMN_MAP, downloadAppointmentTemplate } from './utils/excelParser';
 import { useAuth } from './context/AuthContext';
 import { validateExcelApi, authApi, profileApi, offerLetterApi, billingApi } from './utils/authApi';
 
@@ -364,34 +365,12 @@ function MainApp({ theme, setTheme }) {
 
   const handleDownloadAll = useCallback(async (type) => {
     setIsZipping(true);
-    const zip = new JSZip();
-    const folder = zip.folder('Appointment_Letters');
-
     try {
-      const downloadTasks = [];
-
-      for (let i = 0; i < generatedFiles.length; i++) {
-        const f = generatedFiles[i];
-        if (type !== 'pdf') {
-          downloadTasks.push((async () => {
-            const docxBlob = await offerLetterApi.downloadFile(f.id, 'docx');
-            folder.file(f.docxFilename, docxBlob);
-          })());
-        }
-        if (type !== 'docx') {
-          downloadTasks.push((async () => {
-            const pdfBlob = await offerLetterApi.downloadFile(f.id, 'pdf');
-            folder.file(f.pdfFilename, pdfBlob);
-          })());
-        }
-      }
-
-      await Promise.all(downloadTasks);
-
-      const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
-      saveAs(zipBlob, `Appointment_Letters_${type === 'both' ? 'All' : type.toUpperCase()}.zip`);
+      const empIds = generatedFiles.map(f => f.id).filter(Boolean);
+      const blob = await offerLetterApi.downloadZip(type, empIds.length > 0 ? empIds : null);
+      saveAs(blob, `Appointment_Letters_${type === 'both' ? 'All' : type.toUpperCase()}.zip`);
     } catch (err) {
-      alert(`Failed to compile all letters from server: ${err.message}`);
+      alert(`Failed to download letters ZIP from server: ${err.message}`);
     } finally {
       setIsZipping(false);
     }
@@ -624,12 +603,36 @@ function MainApp({ theme, setTheme }) {
               {/* Upload or Create Blank Sheet option cards — shown when idle */}
               {state === 'idle' && (
                 <div className={styles.selectionGrid}>
+                  {/* Card 1: Upload Existing Excel */}
                   <UploadZone
                     onFileParsed={handleFile}
                     isParsing={false}
                     isValidating={false}
                     error={parseError}
                   />
+
+                  {/* Card 2: Download Pre-Formatted Excel Template */}
+                  <div 
+                    className={styles.templateCard}
+                    onClick={downloadAppointmentTemplate}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && downloadAppointmentTemplate()}
+                  >
+                    <div className={styles.templateIconWrap}>
+                      <FileDown size={28} />
+                    </div>
+                    <h3 className={styles.templateTitle}>Download Excel Format</h3>
+                    <p className={styles.templateText}>
+                      Download the official pre-formatted Excel template with sample data and all 17 required columns.
+                    </p>
+                    <button type="button" className={styles.templateAction}>
+                      <Download size={14} />
+                      <span>Download Format (.xlsx)</span>
+                    </button>
+                  </div>
+
+                  {/* Card 3: Start with Blank Sheet */}
                   <div 
                     className={styles.blankCard}
                     onClick={handleCreateBlank}
@@ -852,7 +855,18 @@ function HelpCard() {
     <div className={styles.helpCard}>
       <h3 className={styles.helpTitle}>How it works</h3>
       <ol className={styles.helpList}>
-        <li><strong>Prepare your Excel file</strong> — Use the provided template with all required employee columns.</li>
+        <li>
+          <strong>Prepare your Excel file</strong> — Use the official format with all 17 required employee columns.
+          <button 
+            type="button" 
+            onClick={downloadAppointmentTemplate}
+            className={styles.inlineTemplateBtn}
+            title="Download Sample Excel Template"
+          >
+            <Download size={12} />
+            <span>Download Format (.xlsx)</span>
+          </button>
+        </li>
         <li><strong>Upload the file</strong> — Drag &amp; drop or click to browse. Preview data before generating.</li>
         <li><strong>Choose format</strong> — Generate as DOCX, PDF, or both — all on the Company's or Vendor's letterhead.</li>
         <li><strong>Download</strong> — Individual files or all together as a .zip archive.</li>
