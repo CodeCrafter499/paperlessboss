@@ -164,6 +164,13 @@ export const offerLetterApi = {
 
   getGenerationHistory: () =>
     request('/api/v1/offer-letters/generation-history', { method: 'GET' }, false),
+
+  downloadZip: (format = 'pdf', employeeIds = null) =>
+    request('/api/v1/offer-letters/download-zip', {
+      method: 'POST',
+      body: JSON.stringify({ format, employee_ids: employeeIds }),
+      responseType: 'blob',
+    }, false),
 };
 
 export async function validateExcelApi(file, checkLimits = false) {
@@ -212,6 +219,12 @@ export const wagesApi = {
   downloadPdf: (wageId) =>
     request(`/api/v1/wages/download/${wageId}/pdf`, {
       method: 'GET',
+      responseType: 'blob',
+    }, false),
+  downloadZip: (wageIds = null) =>
+    request('/api/v1/wages/download-zip', {
+      method: 'POST',
+      body: JSON.stringify({ wage_ids: wageIds }),
       responseType: 'blob',
     }, false),
 };

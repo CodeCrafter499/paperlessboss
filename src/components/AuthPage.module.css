@@ -345,6 +345,15 @@
 
 @keyframes spin { to { transform: rotate(360deg); } }
 
+.agreementText {
+  font-size: 11.5px;
+  color: var(--color-gray-500);
+  line-height: 1.5;
+  margin-top: 6px;
+  margin-bottom: 14px;
+  text-align: left;
+}
+
 .agreementCheckboxContainer {
   display: flex;
   align-items: flex-start;
@@ -380,4 +389,5 @@
 .agreementLink:hover {
   color: var(--color-primary-dark);
 }
+
 

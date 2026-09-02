@@ -95,12 +95,23 @@ export default function ExcelEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editingCell]);
 
+  // Track modifications
+  const [isModified, setIsModified] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [hasSavedSuccess, setHasSavedSuccess] = useState(false);
+
   // Commits active edits
   const commitEdit = useCallback(() => {
     if (!editingCell) return;
     const { rowIndex, colIndex } = editingCell;
     const fieldKey = COLS[colIndex].key;
+    const previousVal = rows[rowIndex]?.[fieldKey] || '';
     
+    if (previousVal !== editValue) {
+      setIsModified(true);
+      setHasSavedSuccess(false);
+    }
+
     const updatedRows = [...rows];
     updatedRows[rowIndex] = {
       ...updatedRows[rowIndex],
@@ -108,7 +119,7 @@ export default function ExcelEditor({
     };
     setRows(updatedRows);
     setEditingCell(null);
-  }, [editingCell, editValue, rows, setRows]);
+  }, [editingCell, editValue, rows, setRows, COLS]);
 
   // Enters edit mode
   const startEditing = (rowIndex, colIndex) => {
@@ -134,6 +145,9 @@ export default function ExcelEditor({
     if (!selectedCell || isReadOnly || isGenerating) return;
     const { rowIndex, colIndex } = selectedCell;
     const fieldKey = COLS[colIndex].key;
+
+    setIsModified(true);
+    setHasSavedSuccess(false);
 
     const updatedRows = [...rows];
     updatedRows[rowIndex] = {
@@ -233,6 +247,8 @@ export default function ExcelEditor({
       case 'Delete':
         if (isReadOnly || isGenerating) return;
         e.preventDefault();
+        setIsModified(true);
+        setHasSavedSuccess(false);
         const clearedRows = [...rows];
         clearedRows[rowIndex] = {
           ...clearedRows[rowIndex],
@@ -259,7 +275,7 @@ export default function ExcelEditor({
 
   // Handle clipboard paste command (TSV formatted data)
   const handlePaste = useCallback((e) => {
-    if (editingCell) return; // Allow normal single-cell paste inside active text input
+    if (editingCell) return;
     if (!selectedCell || isReadOnly || isGenerating) return;
 
     e.preventDefault();
@@ -269,10 +285,11 @@ export default function ExcelEditor({
     const text = clipboardData.getData('text');
     if (!text) return;
 
-    // Parse Tab-Separated Values (TSV) from clipboard
+    setIsModified(true);
+    setHasSavedSuccess(false);
+
     const rowsData = text.split(/\r?\n/).map(row => row.split('\t'));
     
-    // Clean up empty trailing row if copied from excel (which usually appends newline)
     if (rowsData.length > 1 && rowsData[rowsData.length - 1].length === 1 && rowsData[rowsData.length - 1][0] === '') {
       rowsData.pop();
     }
@@ -280,7 +297,6 @@ export default function ExcelEditor({
     const { rowIndex: startRow, colIndex: startCol } = selectedCell;
     const updatedRows = [...rows];
 
-    // Append rows if paste block extends past grid limits
     const endRowIndex = startRow + rowsData.length - 1;
     if (endRowIndex >= updatedRows.length) {
       const neededRows = endRowIndex - updatedRows.length + 1;
@@ -292,7 +308,6 @@ export default function ExcelEditor({
       }
     }
 
-    // Populate parsed clipboard cells into rows
     for (let rIdx = 0; rIdx < rowsData.length; rIdx++) {
       const rowVals = rowsData[rIdx];
       const targetRowIdx = startRow + rIdx;
@@ -310,11 +325,13 @@ export default function ExcelEditor({
     }
 
     setRows(updatedRows);
-  }, [selectedCell, editingCell, rows, setRows, isReadOnly, isGenerating]);
+  }, [selectedCell, editingCell, rows, setRows, isReadOnly, isGenerating, COLS]);
 
   // Add row action
   const handleAddRow = () => {
     if (isReadOnly || isGenerating) return;
+    setIsModified(true);
+    setHasSavedSuccess(false);
     const nextIndex = rows.length > 0 ? Math.max(...rows.map(r => r._rowIndex)) + 1 : 2;
     const newRow = { _rowIndex: nextIndex };
     COLS.forEach(c => { newRow[c.key] = ''; });
@@ -326,12 +343,18 @@ export default function ExcelEditor({
   const handleDeleteRow = (index, e) => {
     if (e) e.stopPropagation();
     if (isReadOnly || isGenerating) return;
+    setIsModified(true);
+    setHasSavedSuccess(false);
     const updated = rows.filter((_, i) => i !== index);
     setRows(updated);
     
     // Clear selection if boundary exceeded
-    if (selectedCell && selectedCell.rowIndex >= updated.length) {
-      setSelectedCell(null);
+    if (selectedCell) {
+      if (updated.length === 0) {
+        setSelectedCell(null);
+      } else if (selectedCell.rowIndex >= updated.length) {
+        setSelectedCell({ ...selectedCell, rowIndex: updated.length - 1 });
+      }
     }
     setEditingCell(null);
   };
@@ -361,18 +384,36 @@ export default function ExcelEditor({
     XLSX.writeFile(workbook, filename ? `edited_${filename}` : 'edited_employees.xlsx');
   };
 
-  // Revalidate handler
-  const handleRevalidateClick = async () => {
+  // 1. Dedicated Validate handler (Always Blue)
+  const handleValidateClick = async () => {
     if (!onRevalidate) return;
     setIsValidating(true);
-    await onRevalidate(rows);
-    setIsValidating(false);
+    try {
+      await onRevalidate(rows);
+    } finally {
+      setIsValidating(false);
+    }
+  };
+
+  // 2. Dedicated Save handler (Active after modification)
+  const handleSaveClick = async () => {
+    if (!onRevalidate) return;
+    setIsSaving(true);
+    try {
+      await onRevalidate(rows);
+      setIsModified(false);
+      setHasSavedSuccess(true);
+      setTimeout(() => setHasSavedSuccess(false), 3500);
+    } catch (err) {
+      console.error('Error saving modifications:', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // Clear selections when clicking outside grid
   useEffect(() => {
     const handleOutsideClick = (e) => {
-      // Don't commit edit or clear selection if clicking inside grid or formula bar/toolbar
       if (containerRef.current && containerRef.current.contains(e.target)) {
         return;
       }
@@ -459,23 +500,65 @@ export default function ExcelEditor({
             type="button" 
             className={styles.sheetsActionBtn} 
             onClick={handleExport}
-            title="Export Excel"
+            title="Download as Excel"
           >
             <Download size={14} />
-            <span>Export Excel</span>
+            <span>Download as Excel</span>
           </button>
 
-          {!isReadOnly && !isGenerating && onRevalidate && (
-            <button 
-              type="button" 
-              className={`${styles.sheetsValidateBtn} ${totalErrors > 0 ? styles.validateWarning : ''}`}
-              onClick={handleRevalidateClick}
-              disabled={isValidating}
-            >
-              <Check size={14} />
-              <span>{isValidating ? 'Validating...' : 'Validate & Save'}</span>
-            </button>
-          )}
+          <div className={styles.validateActionGroup}>
+            <div className={styles.actionRowCount}>
+              <span className={`${styles.rowCountDot} ${totalErrors > 0 ? styles.dotWarning : isModified ? styles.dotModified : ''}`} />
+              <span className={styles.rowCountText}>
+                {rows.length} {rows.length === 1 ? 'Record' : 'Records'}
+                {isModified && <span className={styles.unsavedBadge}> (Unsaved)</span>}
+              </span>
+            </div>
+
+            <div className={styles.btnRow}>
+              {/* 1. Dedicated Validate Button - Always Blue */}
+              {!isReadOnly && !isGenerating && onRevalidate && (
+                <button 
+                  type="button" 
+                  className={styles.sheetsAlwaysBlueValidateBtn}
+                  onClick={handleValidateClick}
+                  disabled={isValidating || isSaving}
+                  title="Validate records for errors and warnings"
+                >
+                  <Check size={14} />
+                  <span>{isValidating ? 'Validating...' : 'Validate'}</span>
+                </button>
+              )}
+
+              {/* 2. Dedicated Save Button - Active after modification */}
+              {!isReadOnly && !isGenerating && onRevalidate && (
+                <button 
+                  type="button" 
+                  className={`${styles.sheetsSaveBtn} ${isModified ? styles.sheetsSaveBtnActive : hasSavedSuccess ? styles.sheetsSaveBtnSuccess : styles.sheetsSaveBtnDisabled}`}
+                  onClick={handleSaveClick}
+                  disabled={isSaving || isValidating || (!isModified && !hasSavedSuccess)}
+                  title={isModified ? "Save modified changes to backend database" : hasSavedSuccess ? "All changes saved!" : "No modifications to save"}
+                >
+                  {isSaving ? (
+                    <>
+                      <div className={styles.miniSpinner} />
+                      <span>Saving...</span>
+                    </>
+                  ) : hasSavedSuccess ? (
+                    <>
+                      <Check size={14} />
+                      <span>Saved</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      <span>Save</span>
+                    </>
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -590,7 +673,7 @@ export default function ExcelEditor({
       <div className={styles.bottomTabBar}>
         <div className={styles.tabList}>
           <div className={`${styles.tabItem} ${styles.tabItemActive}`}>
-            <span className={styles.tabName}>Employees</span>
+            <span className={styles.tabName}>{columnMap === defaultCOLUMN_MAP ? 'Employees' : (columns ? 'Wages' : 'Employees')} ({rows.length})</span>
             <ChevronDown size={12} className={styles.tabChevron} />
           </div>
         </div>
