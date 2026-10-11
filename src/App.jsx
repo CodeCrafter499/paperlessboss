@@ -300,32 +300,22 @@ function MainApp({ theme, setTheme }) {
       const pollInterval = setInterval(async () => {
         try {
           const statusRes = await offerLetterApi.getStatus();
+          const totalTarget = rows.length > 0 ? rows.length : (statusRes.total_employees || 0);
+          const allEmployees = statusRes.employees || [];
+          const readyCount = statusRes.ready_count || allEmployees.filter(emp => emp.ready).length;
           
-          if (statusRes.status === 'failed') {
+          if (statusRes.status === 'failed' || statusRes.error) {
             clearInterval(pollInterval);
             setParseError(statusRes.error || 'Offer letter generation failed.');
             setState('previewing');
             return;
           }
-          
-          // Map progress specifically to the uploaded batch rows rather than whole company history
-          const activeEmployees = statusRes.employees.filter(emp => 
-            rows.some(r => (r.employeeName || '').trim().toLowerCase() === (emp.employee_name || '').trim().toLowerCase())
-          );
-          
-          const readyCount = activeEmployees.filter(emp => emp.ready).length;
-          setGenProgress(readyCount);
 
-          if (statusRes.error) {
-            clearInterval(pollInterval);
-            setParseError(statusRes.error);
-            setState('previewing');
-            return;
-          }
+          setGenProgress(Math.min(readyCount, totalTarget));
 
-          if (readyCount === rows.length) {
+          if (readyCount >= totalTarget && totalTarget > 0) {
             clearInterval(pollInterval);
-            const mappedFiles = activeEmployees.map(emp => ({
+            const mappedFiles = allEmployees.map(emp => ({
               id: emp.employee_id,
               name: emp.employee_name,
               designation: '',
