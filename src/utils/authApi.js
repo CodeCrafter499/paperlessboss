@@ -165,12 +165,16 @@ export const offerLetterApi = {
   getGenerationHistory: () =>
     request('/api/v1/offer-letters/generation-history', { method: 'GET' }, false),
 
-  downloadZip: (format = 'pdf', employeeIds = null) =>
-    request('/api/v1/offer-letters/download-zip', {
-      method: 'POST',
-      body: JSON.stringify({ format, employee_ids: employeeIds }),
+  downloadZip: (format = 'pdf', employeeIds = null) => {
+    let url = `/api/v1/offer-letters/download-zip?format=${format}`;
+    if (employeeIds && Array.isArray(employeeIds) && employeeIds.length > 0) {
+      url += `&employee_ids=${employeeIds.join(',')}`;
+    }
+    return request(url, {
+      method: 'GET',
       responseType: 'blob',
-    }, false),
+    }, false);
+  },
 };
 
 export async function validateExcelApi(file, checkLimits = false) {
@@ -221,12 +225,15 @@ export const wagesApi = {
       method: 'GET',
       responseType: 'blob',
     }, false),
-  downloadZip: (wageIds = null) =>
-    request('/api/v1/wages/download-zip', {
-      method: 'POST',
-      body: JSON.stringify({ wage_ids: wageIds }),
+  downloadZip: (wageMonth, wageYear) => {
+    const params = new URLSearchParams();
+    if (wageMonth) params.append('wage_month', wageMonth);
+    if (wageYear) params.append('wage_year', wageYear);
+    return request(`/api/v1/wages/download-zip?${params.toString()}`, {
+      method: 'GET',
       responseType: 'blob',
-    }, false),
+    }, false);
+  },
 };
 
 

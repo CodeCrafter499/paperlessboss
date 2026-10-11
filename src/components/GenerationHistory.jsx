@@ -8,115 +8,53 @@ import {
   Clock, 
   Download, 
   RefreshCw, 
-  HelpCircle,
-  AlertCircle,
-  ChevronDown,
-  ChevronUp,
-  Archive,
-  Copy,
-  Check,
-  Layers,
-  FileCheck,
-  Briefcase
+  HelpCircle, 
+  AlertCircle, 
+  Coins, 
+  ChevronDown, 
+  ChevronUp, 
+  FolderArchive, 
+  CheckCircle2, 
+  Layers, 
+  Sparkles,
+  Eye,
+  EyeOff
 } from 'lucide-react';
-import JSZip from 'jszip';
-import { offerLetterApi, wagesApi, profileApi } from '../utils/authApi';
+import { offerLetterApi, wagesApi } from '../utils/authApi';
 import { saveAs } from 'file-saver';
 import styles from './GenerationHistory.module.css';
 
-// Helper to format date & time into combination filename (PAN + Timestamp)
-function generateBatchFileName(pan, timestampStr, type) {
-  const panStr = (pan || 'COMPANY').toUpperCase().replace(/[^A-Z0-9]/g, '');
-  const dateObj = new Date(timestampStr);
-  const pad = (n) => String(n).padStart(2, '0');
-  const year = dateObj.getFullYear();
-  const month = pad(dateObj.getMonth() + 1);
-  const day = pad(dateObj.getDate());
-  const hours = pad(dateObj.getHours());
-  const mins = pad(dateObj.getMinutes());
-  const secs = pad(dateObj.getSeconds());
-  const dateFormatted = `${year}${month}${day}_${hours}${mins}${secs}`;
-  
-  if (type === 'offer_letter') {
-    return `${panStr}_${dateFormatted}_Appointment_Letters.zip`;
-  } else {
-    return `${panStr}_${dateFormatted}_Wage_Slips.zip`;
-  }
-}
-
-// Group sequential logs generated within a batch window (within 90s)
-function groupLogsIntoBatches(logs, type, companyPan) {
-  if (!logs || logs.length === 0) return [];
-  
-  // Sort descending by timestamp
-  const sorted = [...logs].sort((a, b) => {
-    const dateA = new Date(type === 'offer_letter' ? a.generated_at : a.created_at);
-    const dateB = new Date(type === 'offer_letter' ? b.generated_at : b.created_at);
-    return dateB - dateA;
-  });
-
-  const batches = [];
-  let currentBatch = null;
-
-  for (const log of sorted) {
-    const dateStr = type === 'offer_letter' ? log.generated_at : log.created_at;
-    const logTime = new Date(dateStr).getTime();
-
-    if (!currentBatch || Math.abs(currentBatch.timestamp - logTime) > 90 * 1000) {
-      const pan = log.company_pan || companyPan || 'COMPANY';
-      const fileName = generateBatchFileName(pan, dateStr, type);
-      currentBatch = {
-        id: `batch_${type}_${log.id || logTime}_${batches.length}`,
-        type,
-        typeName: type === 'offer_letter' ? 'Appointment Letters' : 'Wage Slips (Form V)',
-        timestamp: logTime,
-        dateStr: dateStr,
-        pan,
-        fileName,
-        records: [log]
-      };
-      batches.push(currentBatch);
-    } else {
-      currentBatch.records.push(log);
-    }
-  }
-
-  return batches;
-}
-
-function GenerationHistory({ active, hasDocxAddon = false }) {
-  const [filterType, setFilterType] = useState('all'); // 'all', 'offer_letter', 'wage_slip'
+function GenerationHistory({ active }) {
+  const [historyType, setHistoryType] = useState('offer_letter'); // 'offer_letter' or 'wage_slip'
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [historyData, setHistoryData] = useState({ unique_employees_count: 0, logs: [] });
   const [wageLogs, setWageLogs] = useState([]);
-  const [companyProfile, setCompanyProfile] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [expandedBatches, setExpandedBatches] = useState(new Set());
-  const [zippingBatchId, setZippingBatchId] = useState(null);
-  const [copiedFileName, setCopiedFileName] = useState(null);
-  const [batchSearchMap, setBatchSearchMap] = useState({});
+  
+  // Track open accordion batches
+  const [expandedBatches, setExpandedBatches] = useState({});
+  // Track ZIP download in progress
+  const [downloadingZip, setDownloadingZip] = useState(null);
 
   const fetchHistory = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const [offerRes, wageRes, compRes] = await Promise.all([
-        offerLetterApi.getGenerationHistory().catch(e => { console.error(e); return { unique_employees_count: 0, logs: [] }; }),
-        wagesApi.getHistory().catch(e => { console.error(e); return []; }),
-        profileApi.getCompany().catch(() => null)
-      ]);
-
-      setHistoryData(offerRes || { unique_employees_count: 0, logs: [] });
-      setWageLogs(wageRes || []);
-      if (compRes) setCompanyProfile(compRes);
+      if (historyType === 'offer_letter') {
+        const data = await offerLetterApi.getGenerationHistory();
+        setHistoryData(data || { unique_employees_count: 0, logs: [] });
+      } else {
+        const data = await wagesApi.getHistory();
+        setWageLogs(data || []);
+      }
     } catch (err) {
       console.error('Failed to fetch generation history:', err);
       setError(err.message || 'Failed to load generation history. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [historyType]);
 
   useEffect(() => {
     if (active) {
@@ -124,133 +62,196 @@ function GenerationHistory({ active, hasDocxAddon = false }) {
     }
   }, [active, fetchHistory]);
 
-  const companyPan = companyProfile?.pan || historyData.company_pan || '';
-
-  // Group raw logs into batches
-  const offerBatches = useMemo(() => {
-    return groupLogsIntoBatches(historyData.logs || [], 'offer_letter', companyPan);
-  }, [historyData.logs, companyPan]);
-
-  const wageBatches = useMemo(() => {
-    return groupLogsIntoBatches(wageLogs || [], 'wage_slip', companyPan);
-  }, [wageLogs, companyPan]);
-
-  // Combine and sort all batches
-  const allBatches = useMemo(() => {
-    const combined = [...offerBatches, ...wageBatches];
-    combined.sort((a, b) => b.timestamp - a.timestamp);
-    return combined;
-  }, [offerBatches, wageBatches]);
-
-  // Filter batches based on type and global search query
-  const filteredBatches = useMemo(() => {
-    let list = allBatches;
-    if (filterType !== 'all') {
-      list = list.filter(b => b.type === filterType);
-    }
-
-    if (!searchQuery.trim()) return list;
-
-    const q = searchQuery.toLowerCase().trim();
-    return list.filter(batch => {
-      // Check batch attributes
-      if (batch.fileName.toLowerCase().includes(q)) return true;
-      if (batch.typeName.toLowerCase().includes(q)) return true;
-      if (batch.pan.toLowerCase().includes(q)) return true;
-
-      // Check date format
-      const dateStr = formatDateTime(batch.dateStr).toLowerCase();
-      if (dateStr.includes(q)) return true;
-
-      // Check inner employee records
-      return batch.records.some(r => {
-        const name = (r.employee_name || '').toLowerCase();
-        const uan = (r.uan_number || r.uan || '').toLowerCase();
-        const desig = (r.designation || '').toLowerCase();
-        const lin = (r.lin_number || '').toLowerCase();
-        return name.includes(q) || uan.includes(q) || desig.includes(q) || lin.includes(q);
-      });
-    });
-  }, [allBatches, filterType, searchQuery]);
-
-  // Toggle single batch expansion
-  const toggleBatch = (batchId) => {
-    setExpandedBatches(prev => {
-      const next = new Set(prev);
-      if (next.has(batchId)) {
-        next.delete(batchId);
-      } else {
-        next.add(batchId);
-      }
-      return next;
-    });
-  };
-
-  const expandAll = () => {
-    setExpandedBatches(new Set(filteredBatches.map(b => b.id)));
-  };
-
-  const collapseAll = () => {
-    setExpandedBatches(new Set());
-  };
-
-  // Copy filename to clipboard
-  const handleCopyFileName = (fileName, e) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(fileName);
-    setCopiedFileName(fileName);
-    setTimeout(() => setCopiedFileName(null), 2000);
-  };
-
-  // Download entire batch as a ZIP
-  const handleDownloadBatchZip = async (batch, e) => {
-    if (e) e.stopPropagation();
-    setZippingBatchId(batch.id);
-
-    try {
-      if (batch.type === 'offer_letter') {
-        const empIds = batch.records.map(r => r.employee_id).filter(Boolean);
-        const format = hasDocxAddon ? 'both' : 'pdf';
-        const blob = await offerLetterApi.downloadZip(format, empIds.length > 0 ? empIds : null);
-        saveAs(blob, batch.fileName);
-      } else {
-        const wageIds = batch.records.map(r => r.id).filter(Boolean);
-        const blob = await wagesApi.downloadZip(wageIds.length > 0 ? wageIds : null);
-        saveAs(blob, batch.fileName);
-      }
-      setTimeout(() => fetchHistory(), 800);
-    } catch (err) {
-      alert(`Batch ZIP download failed: ${err.message}`);
-    } finally {
-      setZippingBatchId(null);
-    }
-  };
-
-  // Individual record download handlers
-  const handleDownloadSingleOffer = async (employeeId, format, empName, e) => {
-    if (e) e.stopPropagation();
+  // Individual file redownload
+  const handleDownloadFile = async (employeeId, format) => {
     try {
       const blob = await offerLetterApi.downloadFile(employeeId, format);
-      const safeName = (empName || 'Employee').replace(/[^a-zA-Z0-9_-]/g, '_');
-      saveAs(blob, `Appointment_${format.toUpperCase()}_${safeName}.${format}`);
-      setTimeout(() => fetchHistory(), 800);
+      const filename = `Appointment_${format === 'pdf' ? 'Letter' : 'Template'}_${employeeId}.${format}`;
+      saveAs(blob, filename);
+      setTimeout(() => {
+        fetchHistory();
+      }, 800);
     } catch (err) {
-      alert(`Download failed: ${err.message}`);
+      alert(`Redownload failed: ${err.message}`);
     }
   };
 
-  const handleDownloadSingleWage = async (wageId, empName, e) => {
-    if (e) e.stopPropagation();
+  const handleDownloadWage = async (wageId, empName) => {
     try {
       const blob = await wagesApi.downloadPdf(wageId);
-      const safeName = (empName || 'Employee').replace(/[^a-zA-Z0-9_-]/g, '_');
-      saveAs(blob, `Wage_Slip_${safeName}.pdf`);
+      saveAs(blob, `Wage_Slip_${empName.replace(/\s+/g, '_')}.pdf`);
     } catch (err) {
       alert(`Download failed: ${err.message}`);
     }
   };
 
-  function formatDate(dateStr) {
+  // Group offer letter logs into generation batches (clustered within 10-minute intervals)
+  const offerBatches = useMemo(() => {
+    const logs = historyData.logs || [];
+    if (logs.length === 0) return [];
+
+    const sorted = [...logs].sort((a, b) => new Date(b.generated_at).getTime() - new Date(a.generated_at).getTime());
+    const batches = [];
+    let currentBatch = null;
+
+    for (const log of sorted) {
+      const logTime = new Date(log.generated_at).getTime();
+      if (!currentBatch) {
+        currentBatch = {
+          id: `batch-${logTime}`,
+          timestamp: log.generated_at,
+          logs: [log]
+        };
+      } else {
+        const firstTime = new Date(currentBatch.timestamp).getTime();
+        if (Math.abs(firstTime - logTime) <= 10 * 60 * 1000) {
+          currentBatch.logs.push(log);
+        } else {
+          batches.push(currentBatch);
+          currentBatch = {
+            id: `batch-${logTime}`,
+            timestamp: log.generated_at,
+            logs: [log]
+          };
+        }
+      }
+    }
+    if (currentBatch) {
+      batches.push(currentBatch);
+    }
+
+    const total = batches.length;
+    return batches.map((batch, index) => {
+      const employeeIds = Array.from(new Set(batch.logs.map(l => l.employee_id).filter(Boolean)));
+      const downloadedCount = batch.logs.filter(l => l.downloaded).length;
+      const formats = Array.from(new Set(batch.logs.map(l => l.format)));
+      return {
+        ...batch,
+        batchNumber: total - index,
+        isLatest: index === 0,
+        employeeIds,
+        totalCount: batch.logs.length,
+        downloadedCount,
+        formats
+      };
+    });
+  }, [historyData.logs]);
+
+  // Group wage slips by period (month & year)
+  const wageBatches = useMemo(() => {
+    if (!wageLogs || wageLogs.length === 0) return [];
+
+    const map = new Map();
+    for (const log of wageLogs) {
+      const month = log.wage_month || 'General';
+      const year = log.wage_year || '';
+      const key = `${month} ${year}`.trim();
+      if (!map.has(key)) {
+        map.set(key, {
+          id: `wage-batch-${key.replace(/\s+/g, '_')}`,
+          period: key,
+          wage_month: log.wage_month,
+          wage_year: log.wage_year,
+          logs: [],
+          totalNetWages: 0,
+          latestDate: log.created_at
+        });
+      }
+      const group = map.get(key);
+      group.logs.push(log);
+      group.totalNetWages += (log.net_wages || 0);
+      if (new Date(log.created_at).getTime() > new Date(group.latestDate).getTime()) {
+        group.latestDate = log.created_at;
+      }
+    }
+
+    const sortedGroups = Array.from(map.values()).sort(
+      (a, b) => new Date(b.latestDate).getTime() - new Date(a.latestDate).getTime()
+    );
+
+    return sortedGroups.map((group, index) => ({
+      ...group,
+      isLatest: index === 0
+    }));
+  }, [wageLogs]);
+
+  // Expand latest batch by default on initial load
+  useEffect(() => {
+    if (historyType === 'offer_letter' && offerBatches.length > 0 && Object.keys(expandedBatches).length === 0) {
+      setExpandedBatches({ [offerBatches[0].id]: true });
+    } else if (historyType === 'wage_slip' && wageBatches.length > 0 && Object.keys(expandedBatches).length === 0) {
+      setExpandedBatches({ [wageBatches[0].id]: true });
+    }
+  }, [historyType, offerBatches, wageBatches]);
+
+  // Auto-expand all batches if user is searching
+  useEffect(() => {
+    if (searchQuery.trim().length > 0) {
+      const allOpen = {};
+      if (historyType === 'offer_letter') {
+        offerBatches.forEach(b => { allOpen[b.id] = true; });
+      } else {
+        wageBatches.forEach(b => { allOpen[b.id] = true; });
+      }
+      setExpandedBatches(allOpen);
+    }
+  }, [searchQuery, historyType, offerBatches, wageBatches]);
+
+  const toggleBatch = (batchId) => {
+    setExpandedBatches(prev => ({
+      ...prev,
+      [batchId]: !prev[batchId]
+    }));
+  };
+
+  const toggleAllBatches = (expand) => {
+    const nextState = {};
+    const targetList = historyType === 'offer_letter' ? offerBatches : wageBatches;
+    targetList.forEach(b => { nextState[b.id] = expand; });
+    setExpandedBatches(nextState);
+  };
+
+  // Backend ZIP download handlers
+  const handleDownloadOfferZip = async (format, batch = null) => {
+    const downloadKey = batch ? `batch-${batch.id}-${format}` : `latest-${format}`;
+    setDownloadingZip(downloadKey);
+    try {
+      const empIds = batch ? batch.employeeIds : null;
+      const blob = await offerLetterApi.downloadZip(format, empIds);
+      const dateTag = new Date().toISOString().slice(0, 10);
+      const batchTag = batch ? `_Batch${batch.batchNumber}` : '_All';
+      const filename = `Appointment_Letters${batchTag}_${format.toUpperCase()}_${dateTag}.zip`;
+      saveAs(blob, filename);
+      setTimeout(() => {
+        fetchHistory();
+      }, 1200);
+    } catch (err) {
+      console.error('Download ZIP failed:', err);
+      alert(`Failed to download ZIP: ${err.message || 'Server error'}`);
+    } finally {
+      setDownloadingZip(null);
+    }
+  };
+
+  const handleDownloadWageZip = async (batch = null) => {
+    const downloadKey = batch ? `wage-${batch.id}` : 'wage-all';
+    setDownloadingZip(downloadKey);
+    try {
+      const month = batch ? batch.wage_month : null;
+      const year = batch ? batch.wage_year : null;
+      const blob = await wagesApi.downloadZip(month, year);
+      const periodTag = batch ? `_${batch.period.replace(/\s+/g, '_')}` : '_All';
+      const filename = `Wage_Slips${periodTag}.zip`;
+      saveAs(blob, filename);
+    } catch (err) {
+      console.error('Download Wages ZIP failed:', err);
+      alert(`Failed to download Wage Slips ZIP: ${err.message || 'Server error'}`);
+    } finally {
+      setDownloadingZip(null);
+    }
+  };
+
+  const formatDate = (dateStr) => {
     if (!dateStr) return '—';
     try {
       const d = new Date(dateStr);
@@ -258,9 +259,9 @@ function GenerationHistory({ active, hasDocxAddon = false }) {
     } catch (e) {
       return dateStr;
     }
-  }
+  };
 
-  function formatDateTime(dateTimeStr) {
+  const formatDateTime = (dateTimeStr) => {
     if (!dateTimeStr) return '—';
     try {
       const d = new Date(dateTimeStr);
@@ -274,415 +275,564 @@ function GenerationHistory({ active, hasDocxAddon = false }) {
     } catch (e) {
       return dateTimeStr;
     }
-  }
+  };
 
-  const totalLettersGenerated = (historyData.logs?.length || 0) + wageLogs.length;
+  const totalWagesDisbursed = wageLogs.reduce((acc, curr) => acc + (curr.net_wages || 0), 0);
+
+  const allBatchesCollapsed = useMemo(() => {
+    const list = historyType === 'offer_letter' ? offerBatches : wageBatches;
+    if (list.length === 0) return true;
+    return list.every(b => !expandedBatches[b.id]);
+  }, [expandedBatches, historyType, offerBatches, wageBatches]);
 
   return (
     <div className={styles.wrapper}>
       
-      {/* ── Top statistics summary row ── */}
+      {/* Sub-tab Selector */}
+      <div className={styles.tabSelector}>
+        <button
+          onClick={() => { setHistoryType('offer_letter'); setSearchQuery(''); }}
+          className={`${styles.tabButton} ${historyType === 'offer_letter' ? styles.tabButtonActive : ''}`}
+        >
+          <FileText size={16} />
+          <span>Offer Letters</span>
+          <span className={styles.tabBadge}>{offerBatches.length} Batches</span>
+        </button>
+        <button
+          onClick={() => { setHistoryType('wage_slip'); setSearchQuery(''); }}
+          className={`${styles.tabButton} ${historyType === 'wage_slip' ? styles.tabButtonActive : ''}`}
+        >
+          <Coins size={16} />
+          <span>Wage Slips (Form V)</span>
+          <span className={styles.tabBadge}>{wageBatches.length} Periods</span>
+        </button>
+      </div>
+
+      {/* Top Statistics & Quick Download Center (Template 1 Header) */}
       <div className={styles.statsRow}>
+        
+        {/* Metric 1 */}
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.pinkIcon}`}>
-            <Layers size={22} />
+            <FileSpreadsheet size={24} />
           </div>
           <div className={styles.statInfo}>
-            <div className={styles.statLabel}>Total Upload Batches</div>
-            <div className={styles.statValue}>{allBatches.length}</div>
+            <div className={styles.statLabel}>
+              {historyType === 'offer_letter' ? 'Total Letters Generated' : 'Total Wage Slips'}
+            </div>
+            <div className={styles.statValue}>
+              {historyType === 'offer_letter' ? (historyData.logs?.length || 0) : wageLogs.length}
+            </div>
+            <div className={styles.statSubtext}>
+              {historyType === 'offer_letter' 
+                ? `Across ${offerBatches.length} generation runs` 
+                : `Across ${wageBatches.length} monthly payrolls`}
+            </div>
           </div>
         </div>
 
-        <div className={styles.statCard}>
-          <div className={`${styles.statIcon} ${styles.blueIcon}`}>
-            <FileSpreadsheet size={22} />
-          </div>
-          <div className={styles.statInfo}>
-            <div className={styles.statLabel}>Total Documents Generated</div>
-            <div className={styles.statValue}>{totalLettersGenerated}</div>
-          </div>
-        </div>
-
+        {/* Metric 2 */}
         <div className={styles.statCard}>
           <div className={`${styles.statIcon} ${styles.plumIcon}`}>
-            <Users size={22} />
+            {historyType === 'offer_letter' ? <Users size={24} /> : <Coins size={24} />}
           </div>
           <div className={styles.statInfo}>
-            <div className={styles.statLabel}>Unique Employees (by UAN)</div>
-            <div className={styles.statValue}>{historyData.unique_employees_count || 0}</div>
+            <div className={styles.statLabel}>
+              {historyType === 'offer_letter' ? 'Unique Staff (by LIN)' : 'Net Wages Disbursed'}
+            </div>
+            <div className={styles.statValue}>
+              {historyType === 'offer_letter' 
+                ? `${historyData.unique_employees_count || 0} Staff`
+                : `₹${totalWagesDisbursed.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`}
+            </div>
+            <div className={styles.statSubtext}>
+              {historyType === 'offer_letter' ? 'Active in roster' : 'Total disbursed in DB'}
+            </div>
           </div>
+        </div>
+
+        {/* Quick Download Action Hub Card */}
+        <div className={`${styles.statCard} ${styles.quickActionCard}`}>
+          <div className={styles.quickActionHeader}>
+            <div className={styles.quickActionTitle}>
+              <Sparkles size={16} className={styles.sparkleIcon} />
+              <span>Bulk Download Center (ZIP)</span>
+            </div>
+            <span className={styles.liveBadge}>Backend Fast Stream</span>
+          </div>
+
+          <div className={styles.quickActionButtons}>
+            {historyType === 'offer_letter' ? (
+              <>
+                <button
+                  onClick={() => handleDownloadOfferZip('pdf')}
+                  disabled={downloadingZip !== null || (historyData.logs?.length || 0) === 0}
+                  className={`${styles.zipBtn} ${styles.zipBtnPrimary}`}
+                  title="Download all generated offer letters as PDF in a single ZIP file"
+                >
+                  <Download size={14} className={downloadingZip === 'latest-pdf' ? styles.spinning : ''} />
+                  <span>{downloadingZip === 'latest-pdf' ? 'Creating ZIP...' : 'Download PDF (ZIP)'}</span>
+                </button>
+                <button
+                  onClick={() => handleDownloadOfferZip('docx')}
+                  disabled={downloadingZip !== null || (historyData.logs?.length || 0) === 0}
+                  className={`${styles.zipBtn} ${styles.zipBtnSecondary}`}
+                  title="Download all generated offer letters as DOCX in a single ZIP file"
+                >
+                  <Download size={14} className={downloadingZip === 'latest-docx' ? styles.spinning : ''} />
+                  <span>{downloadingZip === 'latest-docx' ? 'Creating ZIP...' : 'Download DOCX (ZIP)'}</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => handleDownloadWageZip(wageBatches[0] || null)}
+                  disabled={downloadingZip !== null || wageLogs.length === 0}
+                  className={`${styles.zipBtn} ${styles.zipBtnPrimary}`}
+                  title="Download latest month wage slips as ZIP"
+                >
+                  <Download size={14} className={downloadingZip?.startsWith('wage-') ? styles.spinning : ''} />
+                  <span>
+                    {downloadingZip?.startsWith('wage-') 
+                      ? 'Creating ZIP...' 
+                      : `Download ${wageBatches[0]?.period || 'Latest'} (ZIP)`}
+                  </span>
+                </button>
+                <button
+                  onClick={() => handleDownloadWageZip(null)}
+                  disabled={downloadingZip !== null || wageLogs.length === 0}
+                  className={`${styles.zipBtn} ${styles.zipBtnSecondary}`}
+                  title="Download all wage slips from all periods in a single ZIP"
+                >
+                  <FolderArchive size={14} />
+                  <span>Download All Slips (ZIP)</span>
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* Filter and Control Bar */}
+      <div className={styles.actionHeader}>
+        <div className={styles.searchBox}>
+          <Search size={16} className={styles.searchIcon} />
+          <input 
+            type="text" 
+            placeholder={
+              historyType === 'offer_letter' 
+                ? "Filter batch staff by name, LIN, or designation..." 
+                : "Filter slips by name, designation, or UAN..."
+            }
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery('')} className={styles.clearSearchBtn}>✕</button>
+          )}
+        </div>
+
+        <div className={styles.headerRightControls}>
+          <button 
+            onClick={() => toggleAllBatches(allBatchesCollapsed)}
+            className={styles.expandCollapseBtn}
+            title={allBatchesCollapsed ? "Expand all batches" : "Collapse all batches"}
+          >
+            {allBatchesCollapsed ? <Eye size={14} /> : <EyeOff size={14} />}
+            <span>{allBatchesCollapsed ? 'Expand All' : 'Collapse All'}</span>
+          </button>
+
+          <button 
+            onClick={fetchHistory} 
+            disabled={loading} 
+            className={styles.refreshBtn}
+            title="Refresh history logs from database"
+          >
+            <RefreshCw size={14} className={loading ? styles.spinning : ''} />
+            <span>Refresh</span>
+          </button>
         </div>
       </div>
 
-      {/* ── Type Filter Tabs & Search Controls ── */}
-      <div className={styles.controlSection}>
-        <div className={styles.tabSelector}>
-          <button
-            onClick={() => setFilterType('all')}
-            className={`${styles.tabBtn} ${filterType === 'all' ? styles.tabActive : ''}`}
-          >
-            All Uploads ({allBatches.length})
-          </button>
-          <button
-            onClick={() => setFilterType('offer_letter')}
-            className={`${styles.tabBtn} ${filterType === 'offer_letter' ? styles.tabActive : ''}`}
-          >
-            Appointment Letters ({offerBatches.length})
-          </button>
-          <button
-            onClick={() => setFilterType('wage_slip')}
-            className={`${styles.tabBtn} ${filterType === 'wage_slip' ? styles.tabActive : ''}`}
-          >
-            Wage Slips (Form V) ({wageBatches.length})
-          </button>
+      {/* Main Content Area */}
+      {loading && (historyType === 'offer_letter' ? offerBatches.length === 0 : wageBatches.length === 0) ? (
+        <div className={styles.loadingState}>
+          <div className={styles.spinner} />
+          <p>Loading generation history from database...</p>
         </div>
-
-        <div className={styles.actionHeader}>
-          <div className={styles.searchBox}>
-            <Search size={16} className={styles.searchIcon} />
-            <input 
-              type="text" 
-              placeholder="Search by file name (PAN/date), employee name, UAN, or designation..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className={styles.searchInput}
-            />
-            {searchQuery && (
-              <button className={styles.clearSearchBtn} onClick={() => setSearchQuery('')}>✕</button>
-            )}
-          </div>
-
-          <div className={styles.headerButtons}>
-            {filteredBatches.length > 0 && (
-              <div className={styles.expandToggleGroup}>
-                <button className={styles.textBtn} onClick={expandAll}>Expand All</button>
-                <span className={styles.divider}>|</span>
-                <button className={styles.textBtn} onClick={collapseAll}>Collapse All</button>
-              </div>
-            )}
-            <button 
-              onClick={fetchHistory} 
-              disabled={loading} 
-              className={styles.refreshBtn}
-              title="Refresh generation history"
-            >
-              <RefreshCw size={14} className={loading ? styles.spinning : ''} />
-              <span>Refresh</span>
-            </button>
-          </div>
+      ) : error ? (
+        <div className={styles.errorState}>
+          <AlertCircle size={28} className={styles.errorIcon} />
+          <p>{error}</p>
+          <button onClick={fetchHistory} className={styles.retryBtn}>Retry</button>
         </div>
-      </div>
-
-      {/* ── Main Upload Batches List ── */}
-      <div className={styles.batchesContainer}>
-        {loading && allBatches.length === 0 ? (
-          <div className={styles.loadingState}>
-            <div className={styles.spinner} />
-            <p>Loading generation upload history...</p>
-          </div>
-        ) : error ? (
-          <div className={styles.errorState}>
-            <AlertCircle size={24} className={styles.errorIcon} />
-            <p>{error}</p>
-            <button onClick={fetchHistory} className={styles.retryBtn}>Retry</button>
-          </div>
-        ) : filteredBatches.length === 0 ? (
-          <div className={styles.emptyState}>
-            <HelpCircle size={36} className={styles.emptyIcon} />
-            <h3>No Upload Records Found</h3>
-            <p>
-              {searchQuery 
-                ? `No generation uploads matching "${searchQuery}" found.`
-                : filterType === 'offer_letter'
-                  ? 'No appointment letter batches generated yet.'
-                  : filterType === 'wage_slip'
-                    ? 'No wage slip batches generated yet.'
-                    : 'No documents have been generated yet. Upload an Excel sheet to start.'}
-            </p>
-          </div>
-        ) : (
-          <div className={styles.batchList}>
-            {filteredBatches.map((batch, bIdx) => {
-              const isExpanded = expandedBatches.has(batch.id);
-              const isOfferLetter = batch.type === 'offer_letter';
-              const isZippingThis = zippingBatchId === batch.id;
-              const innerSearch = (batchSearchMap[batch.id] || '').toLowerCase().trim();
-
-              // Filter inner records if inner search is active
-              const displayedRecords = innerSearch 
-                ? batch.records.filter(r => {
-                    const name = (r.employee_name || '').toLowerCase();
-                    const uan = (r.uan_number || r.uan || '').toLowerCase();
-                    const desig = (r.designation || '').toLowerCase();
-                    return name.includes(innerSearch) || uan.includes(innerSearch) || desig.includes(innerSearch);
-                  })
-                : batch.records;
-
-              const downloadedCount = batch.records.filter(r => r.downloaded).length;
-
+      ) : (historyType === 'offer_letter' ? offerBatches.length === 0 : wageBatches.length === 0) ? (
+        <div className={styles.emptyState}>
+          <HelpCircle size={36} className={styles.emptyIcon} />
+          <h3>No Records Found</h3>
+          <p>
+            {historyType === 'offer_letter' 
+              ? 'You have not generated any appointment letters yet. Upload an employee excel file to get started.' 
+              : 'You have not generated any wage slips yet. Upload a wage register excel file to get started.'}
+          </p>
+        </div>
+      ) : historyType === 'offer_letter' ? (
+        
+        /* ══════════════════════════════════════════════════════════════════════
+           TEMPLATE 1: OFFER LETTER GENERATION BATCHES
+           ══════════════════════════════════════════════════════════════════════ */
+        <div className={styles.batchListContainer}>
+          {offerBatches.map((batch) => {
+            const isExpanded = !!expandedBatches[batch.id];
+            
+            // Filter records inside this batch if search query exists
+            const filteredBatchLogs = batch.logs.filter(log => {
+              const q = searchQuery.toLowerCase().trim();
+              if (!q) return true;
               return (
-                <div key={batch.id} className={`${styles.batchCard} ${isExpanded ? styles.batchCardExpanded : ''}`}>
-                  {/* ── Batch Header Row ── */}
-                  <div className={styles.batchHeader} onClick={() => toggleBatch(batch.id)}>
-                    <div className={styles.batchLeftInfo}>
-                      <button 
-                        type="button"
-                        className={styles.chevronBtn}
-                        aria-label={isExpanded ? 'Collapse batch details' : 'Expand batch details'}
-                      >
-                        {isExpanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-                      </button>
+                (log.employee_name || '').toLowerCase().includes(q) ||
+                (log.lin_number || '').toLowerCase().includes(q) ||
+                (log.designation || '').toLowerCase().includes(q)
+              );
+            });
 
-                      <div className={styles.batchTitleBlock}>
-                        <div className={styles.fileNameRow}>
-                          <span className={styles.fileIconWrap}>
-                            <Archive size={16} />
-                          </span>
-                          <span className={styles.batchFileName} title={batch.fileName}>
-                            {batch.fileName}
-                          </span>
-                          <button
-                            type="button"
-                            className={styles.copyBtn}
-                            onClick={(e) => handleCopyFileName(batch.fileName, e)}
-                            title="Copy file name"
-                          >
-                            {copiedFileName === batch.fileName ? <Check size={12} className={styles.copySuccess} /> : <Copy size={12} />}
-                          </button>
-                        </div>
+            // If there's an active query and no matching rows in this batch, hide the card
+            if (searchQuery.trim() && filteredBatchLogs.length === 0) {
+              return null;
+            }
 
-                        <div className={styles.batchMetaRow}>
-                          <div className={styles.metaChip}>
-                            <Clock size={12} className={styles.chipIcon} />
-                            <span>{formatDateTime(batch.dateStr)}</span>
-                          </div>
+            const isPdfLoading = downloadingZip === `batch-${batch.id}-pdf`;
+            const isDocxLoading = downloadingZip === `batch-${batch.id}-docx`;
 
-                          <span className={`${styles.typeBadge} ${isOfferLetter ? styles.typeOffer : styles.typeWage}`}>
-                            {isOfferLetter ? 'Appointment Letters' : 'Wage Slips (Form V)'}
-                          </span>
-
-                          <div className={styles.countBadge}>
-                            <Users size={12} />
-                            <span><strong>{batch.records.length}</strong> {batch.records.length === 1 ? 'Employee' : 'Employees'}</span>
-                          </div>
-
-                          {isOfferLetter && (
-                            <span className={`${styles.downloadStatusChip} ${downloadedCount === batch.records.length ? styles.statusAllDone : styles.statusPartial}`}>
-                              <FileCheck size={12} />
-                              {downloadedCount === batch.records.length ? 'All Downloaded' : `${downloadedCount} / ${batch.records.length} Downloaded`}
-                            </span>
-                          )}
-                        </div>
-                      </div>
+            return (
+              <div key={batch.id} className={`${styles.batchCard} ${batch.isLatest ? styles.latestBatchCard : ''}`}>
+                
+                {/* Batch Card Header */}
+                <div className={styles.batchHeader} onClick={() => toggleBatch(batch.id)}>
+                  
+                  <div className={styles.batchHeaderLeft}>
+                    <div className={styles.batchBadge}>
+                      <Layers size={14} />
+                      <span>Batch #{batch.batchNumber}</span>
+                      {batch.isLatest && <span className={styles.latestPill}>Latest</span>}
                     </div>
 
-                    {/* ── Batch Right Action Buttons ── */}
-                    <div className={styles.batchActions} onClick={(e) => e.stopPropagation()}>
-                      <button
-                        type="button"
-                        className={styles.viewDetailsBtn}
-                        onClick={() => toggleBatch(batch.id)}
-                      >
-                        {isExpanded ? 'Hide Details' : 'View Employees'}
-                      </button>
-
-                      <button
-                        type="button"
-                        className={styles.downloadZipBtn}
-                        onClick={(e) => handleDownloadBatchZip(batch, e)}
-                        disabled={isZippingThis}
-                        title={`Download all ${batch.records.length} files as ZIP`}
-                      >
-                        {isZippingThis ? (
-                          <>
-                            <div className={styles.miniSpinner} />
-                            <span>Zipping…</span>
-                          </>
-                        ) : (
-                          <>
-                            <Download size={14} />
-                            <span>Download ZIP</span>
-                          </>
-                        )}
-                      </button>
+                    <div className={styles.batchMetaInfo}>
+                      <div className={styles.batchDate}>
+                        <Clock size={13} className={styles.metaIcon} />
+                        <span>{formatDateTime(batch.timestamp)}</span>
+                      </div>
+                      <div className={styles.batchDot}>•</div>
+                      <div className={styles.batchCountBadge}>
+                        <Users size={13} className={styles.metaIcon} />
+                        <span><strong>{batch.totalCount}</strong> Employees</span>
+                      </div>
+                      <div className={styles.batchDot}>•</div>
+                      <div className={styles.batchFormats}>
+                        {batch.formats.map(fmt => (
+                          <span key={fmt} className={`${styles.formatBadge} ${styles[fmt]}`}>
+                            {fmt.toUpperCase()}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
 
-                  {/* ── Expanded Employee Table Drawer ── */}
-                  {isExpanded && (
-                    <div className={styles.batchDrawer}>
-                      <div className={styles.drawerHeader}>
-                        <div className={styles.drawerSearchBox}>
-                          <Search size={14} className={styles.searchIcon} />
-                          <input 
-                            type="text" 
-                            placeholder={`Filter ${batch.records.length} employees in this upload...`}
-                            value={batchSearchMap[batch.id] || ''}
-                            onChange={(e) => setBatchSearchMap({ ...batchSearchMap, [batch.id]: e.target.value })}
-                            className={styles.drawerSearchInput}
-                          />
-                          {batchSearchMap[batch.id] && (
-                            <button 
-                              className={styles.clearSearchBtn}
-                              onClick={() => setBatchSearchMap({ ...batchSearchMap, [batch.id]: '' })}
-                            >✕</button>
-                          )}
-                        </div>
-                        <span className={styles.drawerRecordCount}>
-                          Showing {displayedRecords.length} of {batch.records.length} employees
-                        </span>
-                      </div>
+                  {/* Batch Action Buttons */}
+                  <div className={styles.batchHeaderRight} onClick={(e) => e.stopPropagation()}>
+                    
+                    <button
+                      onClick={() => handleDownloadOfferZip('pdf', batch)}
+                      disabled={downloadingZip !== null}
+                      className={`${styles.batchActionBtn} ${styles.pdfBtn}`}
+                      title={`Download PDF (.zip) for all ${batch.totalCount} staff in Batch #${batch.batchNumber}`}
+                    >
+                      <Download size={13} className={isPdfLoading ? styles.spinning : ''} />
+                      <span>{isPdfLoading ? 'Zipping...' : 'Download PDF (ZIP)'}</span>
+                    </button>
 
-                      <div className={styles.tableResponsive}>
-                        <table className={styles.innerTable}>
-                          <thead>
-                            <tr>
-                              <th>Employee Name</th>
-                              <th>UAN / Identifier</th>
-                              <th>Designation</th>
-                              {isOfferLetter ? (
-                                <>
-                                  <th>Date of Joining</th>
-                                  <th>Format</th>
-                                  <th>Status</th>
-                                </>
-                              ) : (
-                                <>
-                                  <th>Wage Period</th>
-                                  <th>Net Wages</th>
-                                </>
-                              )}
-                              <th style={{ textAlign: 'right' }}>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {displayedRecords.length === 0 ? (
-                              <tr>
-                                <td colSpan={isOfferLetter ? 7 : 6} className={styles.noInnerRecords}>
-                                  No employees matching filter "{batchSearchMap[batch.id]}"
+                    <button
+                      onClick={() => handleDownloadOfferZip('docx', batch)}
+                      disabled={downloadingZip !== null}
+                      className={`${styles.batchActionBtn} ${styles.docxBtn}`}
+                      title={`Download DOCX (.zip) for all ${batch.totalCount} staff in Batch #${batch.batchNumber}`}
+                    >
+                      <Download size={13} className={isDocxLoading ? styles.spinning : ''} />
+                      <span>{isDocxLoading ? 'Zipping...' : 'Download DOCX (ZIP)'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => toggleBatch(batch.id)}
+                      className={styles.batchToggleBtn}
+                      title={isExpanded ? "Collapse staff list" : "Expand staff list"}
+                    >
+                      <span>{isExpanded ? 'Hide Staff' : `View Staff (${batch.totalCount})`}</span>
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                  </div>
+
+                </div>
+
+                {/* Batch Collapsible Employee Table */}
+                {isExpanded && (
+                  <div className={styles.batchContent}>
+                    <div className={styles.tableResponsive}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Employee Details</th>
+                            <th>LIN Number</th>
+                            <th>Designation</th>
+                            <th>Date of Joining</th>
+                            <th>Format</th>
+                            <th>Status</th>
+                            <th style={{ textAlign: 'right' }}>Direct Download</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredBatchLogs.map((log) => {
+                            const initials = log.employee_name
+                              ? log.employee_name.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                              : 'EE';
+
+                            return (
+                              <tr key={log.id} className={styles.tr}>
+                                <td>
+                                  <div className={styles.empCol}>
+                                    <div className={styles.avatar}>{initials}</div>
+                                    <div className={styles.empName}>{log.employee_name}</div>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span className={styles.linBadge}>{log.lin_number || '—'}</span>
+                                </td>
+                                <td>{log.designation || '—'}</td>
+                                <td>
+                                  <div className={styles.dateCell}>
+                                    <Calendar size={12} className={styles.cellIcon} />
+                                    <span>{formatDate(log.date_of_joining)}</span>
+                                  </div>
+                                </td>
+                                <td>
+                                  <span className={`${styles.formatBadge} ${styles[log.format]}`}>
+                                    {log.format.toUpperCase()}
+                                  </span>
+                                </td>
+                                <td>
+                                  {log.downloaded ? (
+                                    <div className={styles.downloadStatus}>
+                                      <span className={`${styles.statusBadge} ${styles.downloaded}`}>
+                                        <CheckCircle2 size={11} style={{ marginRight: '3px' }} />
+                                        Downloaded
+                                      </span>
+                                      {log.downloaded_by_email && (
+                                        <div className={styles.downloadByInfo} title={`Downloaded at ${formatDateTime(log.downloaded_at)}`}>
+                                          by {log.downloaded_by_email}
+                                        </div>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className={`${styles.statusBadge} ${styles.pending}`}>
+                                      Pending
+                                    </span>
+                                  )}
+                                </td>
+                                <td style={{ textAlign: 'right' }}>
+                                  {log.employee_id ? (
+                                    <div className={styles.actionGroup}>
+                                      {(log.format === 'pdf' || log.format === 'both') && (
+                                        <button 
+                                          onClick={() => handleDownloadFile(log.employee_id, 'pdf')}
+                                          className={`${styles.actionDlBtn} ${styles.pdfAction}`}
+                                          title="Download individual PDF"
+                                        >
+                                          <FileText size={12} />
+                                          <span>PDF</span>
+                                        </button>
+                                      )}
+                                      {(log.format === 'docx' || log.format === 'both') && (
+                                        <button 
+                                          onClick={() => handleDownloadFile(log.employee_id, 'docx')}
+                                          className={`${styles.actionDlBtn} ${styles.docxAction}`}
+                                          title="Download individual DOCX"
+                                        >
+                                          <Download size={12} />
+                                          <span>DOCX</span>
+                                        </button>
+                                      )}
+                                    </div>
+                                  ) : (
+                                    <span className={styles.localOnly} title="Generated client-side only">
+                                      Local-Only
+                                    </span>
+                                  )}
                                 </td>
                               </tr>
-                            ) : isOfferLetter ? (
-                              displayedRecords.map((log) => {
-                                const initials = log.employee_name
-                                  ? log.employee_name.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-                                  : 'EE';
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
 
-                                return (
-                                  <tr key={log.id} className={styles.innerTr}>
-                                    <td>
-                                      <div className={styles.empCol}>
-                                        <div className={styles.avatar}>{initials}</div>
-                                        <span className={styles.empName}>{log.employee_name}</span>
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <span className={styles.linBadge}>{log.uan_number || log.lin_number || '—'}</span>
-                                    </td>
-                                    <td>{log.designation || '—'}</td>
-                                    <td>
-                                      <div className={styles.dateCell}>
-                                        <Calendar size={12} className={styles.cellIcon} />
-                                        <span>{formatDate(log.date_of_joining)}</span>
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <span className={`${styles.formatBadge} ${styles[log.format]}`}>
-                                        {(log.format || 'BOTH').toUpperCase()}
-                                      </span>
-                                    </td>
-                                    <td>
-                                      {log.downloaded ? (
-                                        <span className={`${styles.statusBadge} ${styles.downloaded}`}>
-                                          Downloaded
-                                        </span>
-                                      ) : (
-                                        <span className={`${styles.statusBadge} ${styles.pending}`}>
-                                          Pending
-                                        </span>
-                                      )}
-                                    </td>
-                                    <td style={{ textAlign: 'right' }}>
-                                      {log.employee_id ? (
-                                        <div className={styles.actionGroup}>
-                                          {(log.format === 'pdf' || log.format === 'both') && (
-                                            <button 
-                                              type="button"
-                                              onClick={(e) => handleDownloadSingleOffer(log.employee_id, 'pdf', log.employee_name, e)}
-                                              className={`${styles.actionDlBtn} ${styles.pdfAction}`}
-                                              title="Download Appointment Letter PDF"
-                                            >
-                                              <FileText size={12} />
-                                              <span>PDF</span>
-                                            </button>
-                                          )}
-                                          {(log.format === 'docx' || log.format === 'both') && hasDocxAddon && (
-                                            <button 
-                                              type="button"
-                                              onClick={(e) => handleDownloadSingleOffer(log.employee_id, 'docx', log.employee_name, e)}
-                                              className={`${styles.actionDlBtn} ${styles.docxAction}`}
-                                              title="Download Appointment Letter DOCX"
-                                            >
-                                              <Download size={12} />
-                                              <span>DOCX</span>
-                                            </button>
-                                          )}
-                                        </div>
-                                      ) : (
-                                        <span className={styles.localOnly}>Generated</span>
-                                      )}
-                                    </td>
-                                  </tr>
-                                );
-                              })
-                            ) : (
-                              displayedRecords.map((log) => {
-                                const initials = log.employee_name
-                                  ? log.employee_name.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-                                  : 'EE';
+              </div>
+            );
+          })}
+        </div>
 
-                                return (
-                                  <tr key={log.id} className={styles.innerTr}>
-                                    <td>
-                                      <div className={styles.empCol}>
-                                        <div className={styles.avatar} style={{ background: '#ebeeef', color: '#2b6cb0' }}>{initials}</div>
-                                        <span className={styles.empName}>{log.employee_name}</span>
-                                      </div>
-                                    </td>
-                                    <td>
-                                      <span className={styles.linBadge}>{log.uan || log.bank_account_number || '—'}</span>
-                                    </td>
-                                    <td>{log.designation || '—'}</td>
-                                    <td>{log.wage_month} {log.wage_year}</td>
-                                    <td>
-                                      <strong style={{ color: '#10b981' }}>₹{(log.net_wages || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>
-                                    </td>
-                                    <td style={{ textAlign: 'right' }}>
-                                      <button 
-                                        type="button"
-                                        onClick={(e) => handleDownloadSingleWage(log.id, log.employee_name, e)}
-                                        className={`${styles.actionDlBtn} ${styles.pdfAction}`}
-                                        title="Download Wage Slip PDF"
-                                      >
-                                        <Download size={12} />
-                                        <span>PDF</span>
-                                      </button>
-                                    </td>
-                                  </tr>
-                                );
-                              })
-                            )}
-                          </tbody>
-                        </table>
+      ) : (
+
+        /* ══════════════════════════════════════════════════════════════════════
+           TEMPLATE 1: WAGE SLIPS MONTHLY BATCHES
+           ══════════════════════════════════════════════════════════════════════ */
+        <div className={styles.batchListContainer}>
+          {wageBatches.map((batch) => {
+            const isExpanded = !!expandedBatches[batch.id];
+
+            const filteredBatchLogs = batch.logs.filter(log => {
+              const q = searchQuery.toLowerCase().trim();
+              if (!q) return true;
+              return (
+                (log.employee_name || '').toLowerCase().includes(q) ||
+                (log.designation || '').toLowerCase().includes(q) ||
+                (log.uan || '').toLowerCase().includes(q)
+              );
+            });
+
+            if (searchQuery.trim() && filteredBatchLogs.length === 0) {
+              return null;
+            }
+
+            const isZipLoading = downloadingZip === `wage-${batch.id}`;
+
+            return (
+              <div key={batch.id} className={`${styles.batchCard} ${batch.isLatest ? styles.latestBatchCard : ''}`}>
+                
+                {/* Wage Batch Header */}
+                <div className={styles.batchHeader} onClick={() => toggleBatch(batch.id)}>
+                  
+                  <div className={styles.batchHeaderLeft}>
+                    <div className={styles.batchBadge} style={{ background: '#064e3b', color: '#6ee7b7' }}>
+                      <Calendar size={14} />
+                      <span>{batch.period} Batch</span>
+                      {batch.isLatest && <span className={styles.latestPill} style={{ background: '#059669' }}>Latest Month</span>}
+                    </div>
+
+                    <div className={styles.batchMetaInfo}>
+                      <div className={styles.batchCountBadge}>
+                        <Users size={13} className={styles.metaIcon} />
+                        <span><strong>{batch.logs.length}</strong> Wage Slips</span>
+                      </div>
+                      <div className={styles.batchDot}>•</div>
+                      <div className={styles.batchWagesTotal}>
+                        <Coins size={13} className={styles.metaIcon} color="#10b981" />
+                        <span>Total Paid: <strong>₹{batch.totalNetWages.toLocaleString('en-IN', { maximumFractionDigits: 0 })}</strong></span>
                       </div>
                     </div>
-                  )}
+                  </div>
+
+                  {/* Wage Batch Actions */}
+                  <div className={styles.batchHeaderRight} onClick={(e) => e.stopPropagation()}>
+                    
+                    <button
+                      onClick={() => handleDownloadWageZip(batch)}
+                      disabled={downloadingZip !== null}
+                      className={`${styles.batchActionBtn} ${styles.pdfBtn}`}
+                      style={{
+                        background: 'linear-gradient(135deg, #059669, #047857)',
+                        borderColor: '#10b981'
+                      }}
+                      title={`Download all ${batch.logs.length} wage slips for ${batch.period} as a single ZIP file`}
+                    >
+                      <Download size={13} className={isZipLoading ? styles.spinning : ''} />
+                      <span>{isZipLoading ? 'Zipping...' : `Download ${batch.period} (ZIP)`}</span>
+                    </button>
+
+                    <button
+                      onClick={() => toggleBatch(batch.id)}
+                      className={styles.batchToggleBtn}
+                      title={isExpanded ? "Collapse wage slips" : "Expand wage slips"}
+                    >
+                      <span>{isExpanded ? 'Hide Slips' : `View Slips (${batch.logs.length})`}</span>
+                      {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                    </button>
+
+                  </div>
+
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
+
+                {/* Wage Collapsible Table */}
+                {isExpanded && (
+                  <div className={styles.batchContent}>
+                    <div className={styles.tableResponsive}>
+                      <table className={styles.table}>
+                        <thead>
+                          <tr>
+                            <th>Employee Details</th>
+                            <th>Designation</th>
+                            <th>UAN</th>
+                            <th>Wage Period</th>
+                            <th>Net Wages Paid</th>
+                            <th>Generated At</th>
+                            <th style={{ textAlign: 'right' }}>Direct Download</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredBatchLogs.map((log) => {
+                            const initials = log.employee_name
+                              ? log.employee_name.trim().split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                              : 'EE';
+
+                            return (
+                              <tr key={log.id} className={styles.tr}>
+                                <td>
+                                  <div className={styles.empCol}>
+                                    <div className={styles.avatar} style={{ background: '#064e3b', color: '#6ee7b7' }}>{initials}</div>
+                                    <div className={styles.empName}>{log.employee_name}</div>
+                                  </div>
+                                </td>
+                                <td>{log.designation || '—'}</td>
+                                <td>
+                                  <span className={styles.linBadge}>{log.uan || '—'}</span>
+                                </td>
+                                <td>{log.wage_month} {log.wage_year}</td>
+                                <td>
+                                  <strong style={{ color: '#10b981' }}>₹{(log.net_wages || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}</strong>
+                                </td>
+                                <td className={styles.timeCell}>
+                                  <Clock size={12} className={styles.cellIcon} />
+                                  <span>{formatDateTime(log.created_at)}</span>
+                                </td>
+                                <td style={{ textAlign: 'right' }}>
+                                  <button 
+                                    onClick={() => handleDownloadWage(log.id, log.employee_name)}
+                                    className={`${styles.actionDlBtn} ${styles.pdfAction}`}
+                                    title="Download individual Wage Slip PDF"
+                                  >
+                                    <Download size={12} />
+                                    <span>PDF</span>
+                                  </button>
+                                </td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                )}
+
+              </div>
+            );
+          })}
+        </div>
+
+      )}
+
     </div>
   );
 }
